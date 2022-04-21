@@ -4,13 +4,14 @@ project(simrad_ek80)
 add_compile_options(-std=c++11)
 
 find_package(catkin REQUIRED COMPONENTS
+  acoustic_msgs
   roscpp
 )
 
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES 
-#  CATKIN_DEPENDS
+CATKIN_DEPENDS acoustic_msgs
 #  DEPENDS system_lib
 )
 
@@ -20,6 +21,7 @@ include_directories(
 )
 
 set (SOURCES
+  src/channel.cpp
   src/client.cpp
   src/connection.cpp
   src/packet.cpp
@@ -29,10 +31,14 @@ set (SOURCES
   src/platform.cpp
   src/request.cpp
   src/response.cpp
+  src/sample.cpp
   src/server.cpp
   src/server_manager.cpp
   src/simrad_ek80_node.cpp
+  src/subscription.cpp
+  src/subscription_manager.cpp
   src/subscription_port.cpp
+  src/transducer.cpp
   src/utilities.cpp
 )
 

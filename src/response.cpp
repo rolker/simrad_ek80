@@ -8,32 +8,17 @@ namespace simrad
 Response::Response(const std::string& method, const std::string& response, unsigned int rid)
   :method_(method), rid_(rid)
 {
-  std::cerr << "Response: " << response << std::endl;
+  //std::cerr << "Response: " << response << std::endl;
   std::istringstream rs(response);
   read_xml(rs,response_);
-  boost::property_tree::ptree::const_assoc_iterator n = response_.find("response");
-  if(n != response_.not_found())
-  {
-    boost::property_tree::ptree::const_assoc_iterator ci =  n->second.find("clientInfo");
-    if(ci != n->second.not_found())
-      if(ci->second.count("rid") && ci->second.get<unsigned int>("rid") == rid)
-        return;
-  }
+  if(response_.get<unsigned int>("response.clientInfo.rid") == rid)
+    return;
   throw (Exception("Invalid Response"));
 }
 
 std::string Response::getArgument(const std::string& argument) const
 {
-  boost::property_tree::ptree::const_assoc_iterator n = response_.find("response");
-  if(n != response_.not_found())
-  {
-    boost::property_tree::ptree::const_assoc_iterator mr = n->second.find(method_+"Response");
-    if(mr != n->second.not_found())
-    {
-      return mr->second.find( replace(argument, '/', '.'))->second.data();
-    }
-  }
-  return "";
+  return response_.get("response."+method_+"Response."+replace(argument, '/', '.'),"");
 }
 
 Response::ArgumentList Response::getArgumentList(const std::string& argument) const

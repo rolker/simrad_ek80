@@ -53,6 +53,8 @@ std::string & ltrim(std::string & str);
 std::string & rtrim(std::string & str);
 std::string trim_copy(std::string const & str);
 
+std::vector<std::string> split(std::string input, std::string delimiter);
+
 namespace swap_private
 {
   template <int S> struct SwapSize

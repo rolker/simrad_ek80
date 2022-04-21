@@ -16,13 +16,14 @@ class Connection
 public:
   typedef std::shared_ptr<Connection> Ptr;
 
-  Connection(const sockaddr_in& address, std::string uname, std::string pwd);
-  
+  Connection();
   ~Connection();
+
+  void connect(const sockaddr_in& address, std::string uname, std::string pwd);
 
   std::string getID();
   
-  std::string sendRequest(const std::string& req);
+  std::string sendRequest(const std::string& req, int request_id);
 
   int getRID();
 
@@ -32,13 +33,12 @@ public:
   //const sockaddr_in& getLocalAddress() const;
 
 private:
-
   int socket_;
-  unsigned int nextSeqNo_; /// Number that will be used for the next message to the server.
-  unsigned int lastServerSeqNo_; 
 
   packet::DisconnectRequest disconnect_;
+  
   std::thread connectionThread_;
+  bool connected_ = false;
 
   bool exitThread_;
   std::mutex exitThreadMutex_;
@@ -49,13 +49,12 @@ private:
 
   int reqID_;
 
-  std::vector<packet::Request> pendingRequest_;
-  bool sendRequest_;
-  std::mutex requestMutex_;
+  std::vector<std::vector<packet::Request> > pendingRequests_;
+  std::mutex requestsMutex_;
 
-  std::string pendingResponse_;
-  std::mutex responseMutex_;
-  std::condition_variable responseAvailable_;
+  std::map<int, std::string> pendingResponses_;
+  std::mutex responsesMutex_;
+  std::condition_variable responsesAvailable_;
 };
 
 } // namespace simrad

@@ -2,6 +2,7 @@
 #include <cstring>
 #include <sstream>
 #include <iostream>
+#include <boost/property_tree/xml_parser.hpp>
 
 namespace simrad
 {
@@ -99,7 +100,12 @@ Response::operator bool() const
   return isHeader("RES");
 }
 
-std::map<std::string, std::string> Response::getResult() const
+ConnectResponse::operator bool() const
+{
+  return isHeader("RES") && std::string("CON") == Request;
+}
+
+std::map<std::string, std::string> ConnectResponse::getResult() const
 {
   //std::cout << "MsgResponse: " << MsgResponse << std::endl;
   std::map<std::string, std::string> ret = stringToMap(MsgResponse);
@@ -131,6 +137,19 @@ std::map<std::string, std::string> Response::getResult() const
   //std::cout << "params: " << params << std::endl;
 
   return stringToMap(params);
+}
+
+RequestResponse::operator bool() const
+{
+  return isHeader("RES") && std::string("REQ") == Request;
+}
+
+unsigned int RequestResponse::getRequestID() const
+{
+  std::istringstream rs(MsgResponse);
+  boost::property_tree::ptree response;
+  read_xml(rs, response);
+  return response.get<unsigned int>("response.clientInfo.rid");
 }
 
 Retransmit::operator bool() const

@@ -32,6 +32,7 @@ void ParameterGroup::update(TimePoint t)
       
   if(t > last_time_)
   {
+    std::lock_guard<std::mutex> lock(callbacks_mutex_);
     for(auto callback: callbacks_)
       callback(t);
     last_time_ = t;
@@ -48,6 +49,7 @@ Parameter::Ptr ParameterGroup::operator[](const std::string& key)
 
 void ParameterGroup::addCallback(std::function<void(TimePoint)> callback)
 {
+  std::lock_guard<std::mutex> lock(callbacks_mutex_);
   callbacks_.push_back(callback);
 }
 

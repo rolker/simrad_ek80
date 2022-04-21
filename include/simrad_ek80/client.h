@@ -6,7 +6,7 @@
 #include <simrad_ek80/connection.h>
 #include <simrad_ek80/parameter_manager.h>
 #include <simrad_ek80/platform.h>
-//#include <simrad_ek80/transducer.h>
+#include <simrad_ek80/transducer.h>
 //#include <simrad_ek80/beam_configuration_manager.h>
 
 namespace simrad
@@ -27,7 +27,7 @@ public:
 
   Platform::Ptr getPlatform();
         
-  //Transducer::Ptr getTransducer();
+  Transducer::Ptr getTransducer();
         
   //BeamConfigurationManager::Ptr getBeamConfigurationManager();
 
@@ -38,13 +38,13 @@ private:
 
   Platform::Ptr platform_;
 
-  //Transducer::Ptr transducer_;
+  Transducer::Ptr transducer_;
   //BeamConfigurationManager::Ptr beamConfigurationManager_;
 
   SubscriptionPort::Ptr subscription_port_;
   ParameterManager::Ptr parameter_manager_;
 
-  //SubscriptionManager::Ptr subscriptionManager_;
+  SubscriptionManager::Ptr subscription_manager_;
 
 };
 

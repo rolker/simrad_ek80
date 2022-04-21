@@ -16,7 +16,8 @@ Client::Ptr Client::create(Server const &s)
 
 void Client::connect(std::string uname, std::string pwd)
 {
-  connection_ = Connection::Ptr(new Connection(server_.getAddress(),uname,pwd));
+  connection_ = std::make_shared<Connection>();
+  connection_->connect(server_.getAddress(), uname, pwd);
     
   subscription_port_ = SubscriptionPort::Ptr(new SubscriptionPort);
   parameter_manager_ = ParameterManager::Ptr(new ParameterManager(connection_, subscription_port_));
@@ -25,9 +26,9 @@ void Client::connect(std::string uname, std::string pwd)
     
   // beamConfigurationManager_ = BeamConfigurationManager::Ptr(new BeamConfigurationManager(parameterManager_));
     
-  // subscriptionManager_ = SubscriptionManager::Ptr(new SubscriptionManager(connection_));
+  subscription_manager_ = std::make_shared<SubscriptionManager>(connection_);
     
-  // transducer_ = Transducer::Ptr(new Transducer(parameterManager_, subscriptionManager_));
+  transducer_ = std::make_shared<Transducer>(parameter_manager_, subscription_manager_);
 }
 
 Platform::Ptr Client::getPlatform()
@@ -35,10 +36,10 @@ Platform::Ptr Client::getPlatform()
   return platform_;
 }
 
-// Transducer::Ptr Client::getTransducer()
-// {
-//   return transducer_;
-// }
+Transducer::Ptr Client::getTransducer()
+{
+  return transducer_;
+}
         
 // BeamConfigurationManager::Ptr Client::getBeamConfigurationManager()
 // {

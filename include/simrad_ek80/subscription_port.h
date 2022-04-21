@@ -27,6 +27,7 @@ private:
   int port_;
 
   std::vector<std::function<void (const std::vector<uint8_t>&)> > callbacks_;
+  std::mutex callbacks_mutex_;
 
   std::thread receiver_thread_;
   bool exitThread_;

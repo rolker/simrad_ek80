@@ -16,6 +16,10 @@ public:
   typedef std::shared_ptr<ParameterManager> Ptr;
 
   ParameterManager(Connection::Ptr& connection, SubscriptionPort::Ptr& subscription_port);
+
+  // Make non-copyable
+  ParameterManager(const ParameterManager&) = delete;
+  ParameterManager& operator=(const ParameterManager&) = delete;
                 
   ~ParameterManager();
 

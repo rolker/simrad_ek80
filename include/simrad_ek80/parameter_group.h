@@ -29,9 +29,9 @@ private:
 
   std::map<std::string, Parameter::Ptr> parameters_;
   std::mutex parameters_mutex_;
-
+  
   std::vector<std::function<void(TimePoint)> > callbacks_;
-
+  std::mutex callbacks_mutex_;
 };
 
 } // namespace simrad

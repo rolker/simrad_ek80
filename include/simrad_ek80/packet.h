@@ -83,6 +83,19 @@ struct Response: public Base
   char MsgResponse[1400];
   operator bool() const;
   std::map<std::string, std::string> getResult() const;
+  
+};
+
+struct ConnectResponse: public Response
+{
+  operator bool() const;
+  std::map<std::string, std::string> getResult() const;  
+};
+
+struct RequestResponse: public Response
+{
+  operator bool() const;
+  unsigned int getRequestID() const;
 };
 
 /// Retransmit request from Simrad EM70
@@ -109,7 +122,7 @@ struct ProcessedData: public Base
   unsigned short CurrentMsg;
   unsigned short TotalMsg;
   unsigned short NoOfBytes;
-  unsigned char data;
+  unsigned char* data;
   operator bool() const;
 };
 

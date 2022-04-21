@@ -47,6 +47,7 @@ private:
   std::mutex updates_mutex_;
 
   std::vector<std::function<void(TimePoint)> > callbacks_;
+  std::mutex callbacks_mutex_;
 };
 
 template<typename T> inline T Parameter::get(T default_value, TimePoint time)
@@ -62,18 +63,18 @@ template<typename T> inline T Parameter::get(T default_value, TimePoint time)
         if(updates_.begin()->first <= time)
         {
           if (updates_.count(time))
-            return updates_[time];
+            return *reinterpret_cast<T const*>(updates_[time].data());
           auto i = updates_.upper_bound(time);
           if (i != updates_.end())
           {
             --i;
-            return i->second;
+            return *reinterpret_cast<T const*>(i->second.data());
           }
-          return updates_.rbegin()->second;
+          return *reinterpret_cast<T const*>(updates_.rbegin()->second.data());
         }
       }
       else
-        return updates_.rbegin()->second;
+        return *reinterpret_cast<T const*>(updates_.rbegin()->second.data());
     }
   }
   if(use_default_ && !info_.defaultValue.empty())

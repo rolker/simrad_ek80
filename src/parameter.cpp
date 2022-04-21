@@ -4,7 +4,7 @@ namespace simrad
 {
 
 Parameter::Parameter(Info info, bool use_default, bool value_is_time)
-  :use_default_(use_default), value_is_time_(value_is_time)
+  :info_(info), use_default_(use_default), value_is_time_(value_is_time)
 {
 
 }
@@ -18,6 +18,7 @@ void Parameter::update(const ParameterUpdate& update)
     std::lock_guard<std::mutex> lock(updates_mutex_);
     updates_[t] = update.value;
   }
+  std::lock_guard<std::mutex> lock(callbacks_mutex_);
   for(auto callback: callbacks_)
     callback(t);
 }
@@ -37,6 +38,7 @@ TimePoint Parameter::getLatestTime()
 
 void Parameter::addCallback(std::function<void(TimePoint)> callback)
 {
+  std::lock_guard<std::mutex> lock(callbacks_mutex_);
   callbacks_.push_back(callback);
 }
 

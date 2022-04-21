@@ -53,6 +53,7 @@ Parameter::Info ParameterManager::getInfo(const std::string& parameter_name)
   Request req(connection_, "ParameterServer", "GetParamInfo");
   req.addArgument("paramName", parameter_name);
   Response r(req.getResponse());
+  //std::cout << parameter_name << " getInfo response: " << std::string(r) << std::endl;
   switch (r.getErrorCode())
   {
   case 0:
@@ -69,6 +70,7 @@ Parameter::Info ParameterManager::getInfo(const std::string& parameter_name)
   Parameter::Info info;
     
   std::string stype = r.getArgument("paramInfo/attributes/Type");
+  //std::cout << "stype: " << stype << std::endl;
   if (stype.empty()) // handle silly Simrad inconsistencies between ME70 and ER60 software
   {
     // ER60
@@ -86,7 +88,9 @@ Parameter::Info ParameterManager::getInfo(const std::string& parameter_name)
 
   std::stringstream ss(stype);
   ss >> info.type;
-    
+
+  //std::cout << info.name << ", " << info.description << ", " << info.type << std::endl;
+
   return info;
 }
 

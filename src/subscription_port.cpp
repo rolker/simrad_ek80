@@ -5,6 +5,7 @@
 #include <simrad_ek80/utilities.h>
 #include <cstring>
 #include <poll.h>
+#include <iostream>
 
 namespace simrad
 {
@@ -50,6 +51,7 @@ int SubscriptionPort::getPort() const
 
 void SubscriptionPort::addCallback(std::function<void (const std::vector<uint8_t>&)> callback)
 {
+  std::lock_guard<std::mutex> lock(callbacks_mutex_);
   callbacks_.push_back(callback);
 }
 
@@ -71,7 +73,9 @@ void SubscriptionPort::ReceiverThread()
       int len_received = recv(socket_, packet.data(), packet.size(),0);
       if (len_received > 0)
       {
+        //std::cout << "SubscriptionPort::ReceiverThread: " << len_received << " bytes received on port " << port_ << std::endl;
         packet.resize(len_received);
+        std::lock_guard<std::mutex> lock(callbacks_mutex_);
         for(auto callback: callbacks_)
           callback(packet);
       }

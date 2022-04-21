@@ -160,6 +160,19 @@ std::string trim_copy(std::string const & str)
    return ltrim(rtrim(s));
 }
 
+std::vector<std::string> split(std::string input, std::string delimiter)
+{
+  std::vector<std::string> ret;
+  std::size_t pos = 0;
+  while ((pos = input.find(delimiter)) != std::string::npos)
+  {
+    ret.push_back(input.substr(0,pos));
+    input.erase(0, pos + delimiter.length());
+  }
+  ret.push_back(input);
+  return ret;
+}
+
 std::string replace(const std::string& string, char character, char replacement)
 {
   std::string ret;
@@ -167,7 +180,7 @@ std::string replace(const std::string& string, char character, char replacement)
     if( c == character)
       ret.append(1, replacement);
     else
-      ret.append(1, character);
+      ret.append(1, c);
   return ret;
 }
 
