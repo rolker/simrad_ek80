@@ -19,32 +19,43 @@ void Client::connect(std::string uname, std::string pwd)
   connection_ = std::make_shared<Connection>();
   connection_->connect(server_.getAddress(), uname, pwd);
     
-  subscription_port_ = SubscriptionPort::Ptr(new SubscriptionPort);
-  parameter_manager_ = ParameterManager::Ptr(new ParameterManager(connection_, subscription_port_));
-    
-  platform_ = Platform::Ptr(new Platform(parameter_manager_));
-    
-  // beamConfigurationManager_ = BeamConfigurationManager::Ptr(new BeamConfigurationManager(parameterManager_));
-    
+  parameter_manager_ = std::make_shared<ParameterManager>(connection_);
   subscription_manager_ = std::make_shared<SubscriptionManager>(connection_);
     
-  transducer_ = std::make_shared<Transducer>(parameter_manager_, subscription_manager_);
+  std::string cs = parameter_manager_->getValue("TransceiverMgr/Channels");
+  std::vector<std::string> channelList = split(cs, ",");
+
+  for(auto c: channelList)
+    channels_[c] = std::make_shared<Channel>(parameter_manager_, subscription_manager_, c);
+  
+  parameter_manager_->subscribe("OwnShip/Latitude",false);
+  parameter_manager_->subscribe("OwnShip/Longitude",false);
+  parameter_manager_->subscribe("OwnShip/Heading",false);
+  parameter_manager_->subscribe("OwnShip/Speed");
+  parameter_manager_->subscribe("OwnShip/Course");
+  parameter_manager_->subscribe("OwnShip/Roll");
+  parameter_manager_->subscribe("OwnShip/Pitch");
+  parameter_manager_->subscribe("OwnShip/Heave");
+  parameter_manager_->subscribe("OwnShip/MotionData");
+
+  parameter_manager_->subscribe("TransceiverMgr/Latitude",false);
+  parameter_manager_->subscribe("TransceiverMgr/Longitude",false);
+  parameter_manager_->subscribe("TransceiverMgr/Heave");
+  parameter_manager_->subscribe("TransceiverMgr/Roll");
+  parameter_manager_->subscribe("TransceiverMgr/Pitch");
 }
 
-Platform::Ptr Client::getPlatform()
+std::vector<Channel::Ptr> Client::getChannels()
 {
-  return platform_;
+  std::vector<Channel::Ptr> ret;
+  for(auto c: channels_)
+    ret.push_back(c.second);
+  return ret;
 }
 
-Transducer::Ptr Client::getTransducer()
+std::shared_ptr<ParameterManager> Client::getParameterManager()
 {
-  return transducer_;
+  return parameter_manager_;
 }
-        
-// BeamConfigurationManager::Ptr Client::getBeamConfigurationManager()
-// {
-//   return beamConfigurationManager_;
-// }
-
 
 } // namespace simrad

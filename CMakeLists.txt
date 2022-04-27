@@ -26,9 +26,7 @@ set (SOURCES
   src/connection.cpp
   src/packet.cpp
   src/parameter.cpp
-  src/parameter_group.cpp
   src/parameter_manager.cpp
-  src/platform.cpp
   src/request.cpp
   src/response.cpp
   src/sample.cpp
@@ -37,8 +35,7 @@ set (SOURCES
   src/simrad_ek80_node.cpp
   src/subscription.cpp
   src/subscription_manager.cpp
-  src/subscription_port.cpp
-  src/transducer.cpp
+  src/udp_socket.cpp
   src/utilities.cpp
 )
 

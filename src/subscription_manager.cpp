@@ -7,8 +7,6 @@ namespace simrad
 SubscriptionManager::SubscriptionManager(Connection::Ptr& connection)
   :connection_(connection)
 {
-  port_ =  std::make_shared<SubscriptionPort>();
-  port_->addCallback([this](const std::vector<uint8_t>& packet){this->packet_callback(packet);});
 }
                 
 SubscriptionManager::~SubscriptionManager()
@@ -26,9 +24,9 @@ void SubscriptionManager::subscribe(Subscription::Ptr& subscription)
   Request req(connection_, "RemoteDataServer", "Subscribe");
   req.addArgument("dataRequest", subscription->subscribeString());
   std::cout << "dataRequest: " << subscription->subscribeString() << std::endl;
-  req.addArgument("requestedPort", std::to_string(port_->getPort()));
+  req.addArgument("requestedPort", std::to_string(getPort()));
 
-  std::cout << "SubscriptionManager::subscribe port: " << port_->getPort() << std::endl;
+  std::cout << "SubscriptionManager::subscribe port: " << getPort() << std::endl;
 
   std::lock_guard<std::mutex> lock(subscriptions_mutex_);
     
@@ -51,7 +49,7 @@ void SubscriptionManager::unsubscribe(Subscription::Ptr& subscription)
     throw(Exception(r.getErrorMessage()));
 }
 
-void SubscriptionManager::packet_callback(const std::vector<uint8_t>& packet)
+void SubscriptionManager::receivePacket(const std::vector<uint8_t>& packet)
 {
   const packet::ProcessedData *data = reinterpret_cast<const packet::ProcessedData *>(packet.data());
   if(*data)

@@ -4,21 +4,18 @@
 namespace simrad
 {
 
-ParameterManager::ParameterManager(Connection::Ptr& connection, SubscriptionPort::Ptr& subscription_port)
-  :connection_(connection), subscription_port_(subscription_port)
+ParameterManager::ParameterManager(Connection::Ptr& connection)
+  :connection_(connection)
 {
-  if(!subscription_port_)
-    subscription_port_ = std::make_shared<SubscriptionPort>();
-  subscription_port_->addCallback([this](const std::vector<uint8_t>& packet){this->process_packet(packet);});
 }
 
 ParameterManager::~ParameterManager()
 {
-  for(auto p: parameters_)
+  for(auto p: parameter_ids_)
   {
     Request req (connection_,"ParameterServer","CloseSubscription");
-    req.addArgument("paramName", parameter_names_[p.first]);
-    req.addArgument("cookie", std::to_string(p.first));
+    req.addArgument("paramName", p.first);
+    req.addArgument("cookie", std::to_string(p.second));
     req.getResponse();
   }
 }
@@ -33,7 +30,7 @@ Parameter::Ptr ParameterManager::subscribe(const std::string& parameter_name, bo
                     
   Request req (connection_, "ParameterServer", "Subscribe");
   req.addArgument("paramName", parameter_name);
-  req.addArgument("requestedPort", std::to_string(subscription_port_->getPort()));
+  req.addArgument("requestedPort", std::to_string(getPort()));
                     
   Response r(req.getResponse());
 
@@ -44,8 +41,14 @@ Parameter::Ptr ParameterManager::subscribe(const std::string& parameter_name, bo
   std::lock_guard<std::mutex> lock(parameters_mutex_);
 
   parameters_[id] = ret;
-  parameter_names_[id] = parameter_name;
+  parameter_ids_[parameter_name] = id;
   return ret;
+}
+
+Parameter::Ptr ParameterManager::get(const std::string& parameter_name)
+{
+  std::lock_guard<std::mutex> lock(parameters_mutex_);
+  return parameters_[parameter_ids_[parameter_name]];
 }
 
 Parameter::Info ParameterManager::getInfo(const std::string& parameter_name)
@@ -94,7 +97,7 @@ Parameter::Info ParameterManager::getInfo(const std::string& parameter_name)
   return info;
 }
 
-std::string ParameterManager::get(const std::string& parameter_name)
+std::string ParameterManager::getValue(const std::string& parameter_name)
 {
   Request req(connection_, "ParameterServer", "GetParameter");
   req.addArgument("paramName", parameter_name);
@@ -119,111 +122,94 @@ std::string ParameterManager::get(const std::string& parameter_name)
   return r.getArgument("paramValue/value");
 }
 
-void ParameterManager::process_packet(const std::vector<uint8_t>& packet)
+void ParameterManager::receivePacket(const std::vector<uint8_t>& packet)
 {
-                    
-  #pragma pack(1)
-                    
-  struct Record
-  {
-      unsigned short recID;
-      unsigned short recLen;
-  };
-  
-  struct Header
-  {
-      unsigned short currentMsg;
-      unsigned short totalMsg;
-      int32_t seqNo;
-      int32_t msgID;
-      Record firstRecord;
-  };
-  
-  struct Value
-  {
-      int32_t len;
-      char value;
-      int Size(){return len+sizeof(len);}
-  };
-  
-  struct ParameterDefinition
-  {
-      int32_t cookie;
-      uint64_t timeStamp;
-      Value value;
-      int32_t unused;
-      int Size(){return sizeof(ParameterDefinition) - sizeof(value) + value.Size();}
-  };
-  
-  struct ParameterRecord: public Record
-  {
-      int32_t paramCount;
-      ParameterDefinition parameters;
-  };
-  
-  #pragma pack()
-                    
-  int cursor = sizeof(Header);
-  
-  Header *h = (Header*)(packet.data());
+  packet::ParameterMessageHeader* h = (packet::ParameterMessageHeader*)(packet.data());
   //std::cerr << "\tMsg: " << h->currentMsg << " of " << h->totalMsg << "\tSeq No: " << h->seqNo << "\tid:" << h->msgID << std::endl;
   if(h->currentMsg > 1)
     throw(Exception("Fragmented update packet not yet supported!"));
-                    
-  if(h->msgID == 6) //PM_VALUE_ATTRIBUTE_UPDATE = 6
+
+  TimePoint latest_update_time = TimePoint();
+
+
+  switch(h->msgID)
   {
-    Record *rec = &h->firstRecord;
-    bool done = false;
-    while(!done)
+  case 6: //PM_VALUE_ATTRIBUTE_UPDATE = 6
     {
-      switch (rec->recID)
+      //std::cout << "Updates..." << std::endl;
+      packet::RecordHeader* rec = h->records();
+      bool done = false;
+      while(!done)
       {
-        case 11: // value update
+        //std::cout << "Rec Header id: " << rec->recID << " len: " << rec->recLen << std::endl;
+        switch (rec->recID)
         {
-          ParameterRecord *pr = (ParameterRecord *)rec;
-          //std::cerr << "\tValue update with " << pr->paramCount << " records." << std::endl;
-          ParameterDefinition *param = &pr->parameters;
-          for(int i = 0; i<pr->paramCount; ++i)
+          case 11: // value update
           {
-              //std::cerr << "ID:\t" << param->cookie << " time: " << gz4d::Time::FromNT(param->timeStamp).String() << " (" << param->timeStamp << ")" << std::endl;
-              //std::cerr << "\tvalue len: " << param->value.len << std::endl;
-              
-              //if(param->timeStamp)
+            packet::ParameterRecord* pr = reinterpret_cast<packet::ParameterRecord*>(rec);
+            //std::cerr << "\tValue update with " << pr->paramCount << " records." << std::endl;
+            packet::ParameterDefinition* param = pr->parameters();
+            for(int i = 0; i<pr->paramCount; ++i)
+            {
+              ParameterUpdate update;
+              update.id = param->cookie;
+              update.time = fromSimradTime(param->timeStamp);
+              if (update.time > latest_update_time)
+                latest_update_time = update.time;
+              auto value = param->value();
+              char* v = value->value();
+              update.value = std::vector<char>(v,v+value->len);
+              Parameter::Ptr p;
+              while(!p)
               {
-                ParameterUpdate update;
-                update.id = param->cookie;
-                update.time = fromSimradTime(param->timeStamp);
-                char *v = &param->value.value;
-                update.value = std::vector<char>(v,&v[param->value.len]);
-                Parameter::Ptr p;
-                while(!p)
                 {
-                  {
-                    std::lock_guard<std::mutex> lock(parameters_mutex_);
-                    p = parameters_[update.id];
-                  }
-                  if (!p)
-                    std::this_thread::yield();
+                  std::lock_guard<std::mutex> lock(parameters_mutex_);
+                  p = parameters_[update.id];
                 }
-                p->update(update);
+                if (!p)
+                  std::this_thread::yield();
               }
-              param =  (ParameterDefinition*)&(((char *)param)[param->Size()]);
+              p->update(update);
+              param = param->next();
+            }
+            break;
           }
-          break;
+          case 12: // attribute update
+          {
+            // std::cerr << "\tAttribue update" << std::endl;
+            // packet::AttributeRecord* ar = reinterpret_cast<packet::AttributeRecord*>(rec);
+            // std::cerr << ar->attribCount << " updates" << std::endl;
+            // packet::AttributeDefinition* ad = ar->attributes();
+            // for(int i = 0; i < ar->attribCount; i++)
+            // {
+            //   std::cout << "  cookie: " << ad->cookie << std::endl;
+            //   std::lock_guard<std::mutex> lock(parameters_mutex_);
+            //   auto p = parameters_[ad->cookie];
+            //   if(!p)
+            //     std::cerr << "Parameter not found with ID " << ad->cookie << " for attribute updates" << std::endl;
+            //   else
+            //     std::cout << "Attribute updates for " << p->getInfo().name << std::endl;
+            //   std::cout << "  update " <<  ad->attributeName.str() << ": " << ad->attributeLen() << " bytes" << std::endl;
+            //   ad = ad->next();
+            // }
+            break;
+          }
+          case 0xdead: // end of records
+            done = true;
+            break;
+          default:
+            throw(Exception("Unknown update record type"));
+            break;
         }
-        case 12: // attribute update
-          //std::cerr << "\tAttribue update" << std::endl;
-          break;
-        case 0xdead: // end of records
-          done = true;
-          break;
-        default:
-          break;
-      }  
-      rec = reinterpret_cast<Record*>(&(reinterpret_cast<char *>(rec)[rec->recLen]));
-      
+        rec = rec->next();
+      }
     }
+    break;
+  default:
+    std::cout << "Unhandled parameter update msgID: " << h->msgID << std::endl;
   }
+  if (latest_update_time != TimePoint())
+    callCallbacks(latest_update_time);
 }
 
 } // namespace simrad

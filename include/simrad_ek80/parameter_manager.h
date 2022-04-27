@@ -2,20 +2,21 @@
 #define SIMRAD_EK80_PARAMETER_MANAGER_H
 
 #include <simrad_ek80/parameter.h>
-#include <simrad_ek80/subscription_port.h>
+#include <simrad_ek80/udp_socket.h>
 #include <simrad_ek80/connection.h>
 #include <simrad_ek80/request.h>
+#include <simrad_ek80/callbacks.h>
 
 namespace simrad
 {
 
 /// Manages subscriptions to parameters.
-class ParameterManager
+class ParameterManager: public UDPSocket, public Callbacks<simrad::TimePoint>
 {
 public:
   typedef std::shared_ptr<ParameterManager> Ptr;
 
-  ParameterManager(Connection::Ptr& connection, SubscriptionPort::Ptr& subscription_port);
+  ParameterManager(Connection::Ptr& connection);
 
   // Make non-copyable
   ParameterManager(const ParameterManager&) = delete;
@@ -24,20 +25,20 @@ public:
   ~ParameterManager();
 
   Parameter::Ptr subscribe(const std::string& parameter_name, bool use_default = true);
+  Parameter::Ptr get(const std::string& parameter_name);
                 
   Parameter::Info getInfo(const std::string& parameter_name);
                 
-  std::string get(const std::string& parameter_name);
-
-  void process_packet(const std::vector<uint8_t>& packet);
+  std::string getValue(const std::string& parameter_name);
 
 private:
-  SubscriptionPort::Ptr subscription_port_;
+  void receivePacket(const std::vector<uint8_t>& packet) override;
+
   Connection::Ptr connection_;
 
   std::mutex parameters_mutex_;
   std::map<int,Parameter::Ptr> parameters_;
-  std::map<int,std::string> parameter_names_;
+  std::map<std::string, int> parameter_ids_;
 };
 
 

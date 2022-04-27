@@ -36,8 +36,6 @@ public:
 
   TimePoint getLatestTime();
 
-  void addCallback(std::function<void(TimePoint)> callback);
-                
 private:
   Info info_;
   bool use_default_;
@@ -45,9 +43,6 @@ private:
 
   std::map<TimePoint, std::vector<char> > updates_;
   std::mutex updates_mutex_;
-
-  std::vector<std::function<void(TimePoint)> > callbacks_;
-  std::mutex callbacks_mutex_;
 };
 
 template<typename T> inline T Parameter::get(T default_value, TimePoint time)

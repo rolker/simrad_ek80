@@ -5,12 +5,12 @@
 #include <mutex>
 #include <condition_variable>
 #include <simrad_ek80/packet.h>
-#include <netinet/in.h>
+#include <simrad_ek80/udp_socket.h>
 
 namespace simrad
 {
 
-class Connection
+class Connection: public UDPSocket
 {
 
 public:
@@ -27,30 +27,25 @@ public:
 
   int getRID();
 
-  void operator()();
-  
 
-  //const sockaddr_in& getLocalAddress() const;
+private:  
+  void receivePacket(const std::vector<uint8_t>& packet) override;
 
-private:
-  int socket_;
 
   packet::DisconnectRequest disconnect_;
   
-  std::thread connectionThread_;
   bool connected_ = false;
 
-  bool exitThread_;
-  std::mutex exitThreadMutex_;
+  unsigned int nextSeqNo_ = 1;
+  std::mutex nextSeqNoMutex_;
 
-  sockaddr_in address_;
+  unsigned int lastServerSeqNo_ = 0;
 
   std::string clientID_; /// Server supplied ID.
+  std::mutex clientIDMutex_;
+  std::condition_variable clientIDAvailable_;
 
-  int reqID_;
-
-  std::vector<std::vector<packet::Request> > pendingRequests_;
-  std::mutex requestsMutex_;
+  int reqID_ = 1;
 
   std::map<int, std::string> pendingResponses_;
   std::mutex responsesMutex_;

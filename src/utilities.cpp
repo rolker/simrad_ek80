@@ -15,6 +15,8 @@ TimePoint fromSimradTime(uint64_t t)
   // 100 nanosecond intervals since January 1, 1601.
   // This is the internal "filetime" used by the Windows
   // operating systems.
+  if(t == 0)
+    return TimePoint();
   return TimePoint(std::chrono::nanoseconds((t-0x019db1ded53e8000ULL)*100));
 }
 

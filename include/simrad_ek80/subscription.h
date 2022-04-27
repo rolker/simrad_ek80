@@ -1,11 +1,10 @@
 #ifndef SIMRAD_EK80_SUBSCRIPTION_H
 #define SIMRAD_EK80_SUBSCRIPTION_H
 
-#include <simrad_ek80/parameter_group.h>
 #include <mutex>
 #include <memory>
 #include <vector>
-
+#include <map>
 
 namespace simrad
 {
@@ -16,7 +15,7 @@ public:
   typedef std::shared_ptr<Subscription> Ptr;
   typedef std::weak_ptr<Subscription> WeakPtr;
 
-  Subscription(const std::string& type, const std::string& channel, const ParameterGroup::Map& ping_parameters);
+  Subscription(const std::string& type, const std::string& channel);
     
   virtual ~Subscription();
 
@@ -27,8 +26,6 @@ public:
 
   std::string subscribeString();
     
-  const ParameterGroup::Map& getPingParameters() const;
-
   virtual void addData(std::shared_ptr<std::vector<unsigned char> >& data) = 0;
 
 protected:
@@ -37,13 +34,9 @@ protected:
   std::map<std::string,std::string> parameters_;
   int id_;
 
-  ParameterGroup::Map ping_parameters_;
-
 private:
   Subscription(const Subscription&);
   Subscription();
-
-
 };
 
 

@@ -1,0 +1,7 @@
+<launch>
+  <arg name="replay" default="false"/>
+
+  <node pkg="simrad_ek80" type="simrad_ek80" name="simrad_ek80">
+    <param name="replay" value="$(arg replay)"/>
+  </node>
+</launch>

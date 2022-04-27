@@ -5,9 +5,7 @@
 #include <simrad_ek80/server.h>
 #include <simrad_ek80/connection.h>
 #include <simrad_ek80/parameter_manager.h>
-#include <simrad_ek80/platform.h>
-#include <simrad_ek80/transducer.h>
-//#include <simrad_ek80/beam_configuration_manager.h>
+#include <simrad_ek80/channel.h>
 
 namespace simrad
 {
@@ -25,27 +23,16 @@ public:
         
   void connect(std::string uname = "Simrad", std::string pwd = std::string());
 
-  Platform::Ptr getPlatform();
-        
-  Transducer::Ptr getTransducer();
-        
-  //BeamConfigurationManager::Ptr getBeamConfigurationManager();
-
+  std::vector<Channel::Ptr> getChannels();
+  std::shared_ptr<ParameterManager> getParameterManager();
 private:
   Connection::Ptr connection_;
-
   Server server_;
 
-  Platform::Ptr platform_;
+  std::map<std::string, Channel::Ptr> channels_;
 
-  Transducer::Ptr transducer_;
-  //BeamConfigurationManager::Ptr beamConfigurationManager_;
-
-  SubscriptionPort::Ptr subscription_port_;
   ParameterManager::Ptr parameter_manager_;
-
   SubscriptionManager::Ptr subscription_manager_;
-
 };
 
 } // namespace simrad

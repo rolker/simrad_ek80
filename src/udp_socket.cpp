@@ -1,16 +1,13 @@
-#include <simrad_ek80/subscription_port.h>
+#include <simrad_ek80/udp_socket.h>
 
-#include <sys/socket.h>
-#include <netdb.h>
 #include <simrad_ek80/utilities.h>
 #include <cstring>
 #include <poll.h>
-#include <iostream>
 
 namespace simrad
 {
 
-SubscriptionPort::SubscriptionPort()
+UDPSocket::UDPSocket()
 {
   socket_ = socket(AF_INET, SOCK_DGRAM, 0);
   if(socket_ < 0)
@@ -32,10 +29,10 @@ SubscriptionPort::SubscriptionPort()
   port_ = ntohs(bind_address.sin_port);
 
   exitThread_ = false;
-  receiver_thread_ = std::move(std::thread(&SubscriptionPort::ReceiverThread,this));
+  receiver_thread_ = std::move(std::thread(&UDPSocket::receiverThread,this));
 }
 
-SubscriptionPort::~SubscriptionPort()
+UDPSocket::~UDPSocket()
 {
   {
     std::lock_guard<std::mutex> lock(exitThreadMutex_);
@@ -44,18 +41,37 @@ SubscriptionPort::~SubscriptionPort()
   receiver_thread_.join();
 }
 
-int SubscriptionPort::getPort() const
+int UDPSocket::getPort() const
 {
   return port_;
 }
 
-void SubscriptionPort::addCallback(std::function<void (const std::vector<uint8_t>&)> callback)
+void UDPSocket::sendPacket(const std::vector<uint8_t>& packet)
 {
-  std::lock_guard<std::mutex> lock(callbacks_mutex_);
-  callbacks_.push_back(callback);
+  std::lock_guard<std::mutex> lock(outgoing_packets_mutex_);
+  outgoing_packets_.push_back(packet);
 }
 
-void SubscriptionPort::ReceiverThread()
+void UDPSocket::sendPackets(const std::vector<std::vector<uint8_t> >& packets)
+{
+  std::lock_guard<std::mutex> lock(outgoing_packets_mutex_);  
+  for(auto packet: packets)
+  {
+    outgoing_packets_.push_back(packet);
+  }
+}
+
+void UDPSocket::setRemoteAddress(const sockaddr_in& address)
+{
+  memcpy(&remote_address_, &address, sizeof(sockaddr_in));
+}
+  
+void UDPSocket::setFinalizePacket(const std::vector<uint8_t>& packet)
+{
+  finalize_packet_ = packet;
+}
+
+void UDPSocket::receiverThread()
 {
   bool done = false;
   while (!done)
@@ -63,7 +79,7 @@ void SubscriptionPort::ReceiverThread()
     pollfd p;
     p.fd = socket_;
     p.events = POLLIN;
-    int ret = poll(&p, 1, 200);
+    int ret = poll(&p, 1, 0);
     if(ret < 0)
       perror(nullptr);
     if(ret > 0 && p.revents & POLLIN)
@@ -73,12 +89,16 @@ void SubscriptionPort::ReceiverThread()
       int len_received = recv(socket_, packet.data(), packet.size(),0);
       if (len_received > 0)
       {
-        //std::cout << "SubscriptionPort::ReceiverThread: " << len_received << " bytes received on port " << port_ << std::endl;
         packet.resize(len_received);
-        std::lock_guard<std::mutex> lock(callbacks_mutex_);
-        for(auto callback: callbacks_)
-          callback(packet);
+        receivePacket(packet);
       }
+    }
+    {
+      std::lock_guard<std::mutex> lock(outgoing_packets_mutex_);
+      for(auto packet: outgoing_packets_)
+        sendto(socket_, packet.data(), packet.size(), 0, (sockaddr*)&remote_address_, sizeof(remote_address_));
+      std::this_thread::yield();
+      outgoing_packets_.clear();
     }
     std::lock_guard<std::mutex> lock(exitThreadMutex_);
     if(exitThread_)
@@ -86,7 +106,9 @@ void SubscriptionPort::ReceiverThread()
     else
       std::this_thread::yield();
   }
-}
+  if(!finalize_packet_.empty())
+    sendto(socket_, finalize_packet_.data(), finalize_packet_.size(), 0, (sockaddr*)&remote_address_, sizeof(remote_address_));
 
+}
 
 } // namespace simrad

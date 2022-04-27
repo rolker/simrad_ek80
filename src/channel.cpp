@@ -3,15 +3,13 @@
 namespace simrad
 {
 
-Channel::Channel(ParameterManager::Ptr& parameter_manager, SubscriptionManager::Ptr &subscription_manager, const ParameterGroup::Map& parameter_group, const std::string& name)
-  :parameter_manager_(parameter_manager), subscription_manager_(subscription_manager), parameters_(parameter_group), name_(name)
+Channel::Channel(ParameterManager::Ptr& parameter_manager, SubscriptionManager::Ptr &subscription_manager, const std::string& name)
+  :parameter_manager_(parameter_manager), subscription_manager_(subscription_manager), name_(name)
 {
-  parameters_["channel"] = ParameterGroup::Ptr(new ParameterGroup(parameter_manager));
 }
 
 Channel::~Channel()
 {
-
 }
 
 std::string Channel::getName()
@@ -44,20 +42,11 @@ std::string Channel::getName()
 //   return target_detection_;
 // }
 
-SampleSubscription::Ptr& Channel::getSamples(float range, std::string sample_data_type)
+void Channel::subscribe(SampleSubscription::Ptr subscription)
 {
-  if(samples_.find(sample_data_type) == samples_.end())
-  {
-    subscribe();
-    samples_[sample_data_type] = SampleSubscription::Ptr(new SampleSubscription(name_, parameters_, sample_data_type));
-    samples_[sample_data_type]->setParameter("SampleDataType", sample_data_type);
-    samples_[sample_data_type]->setParameter("Range", std::to_string(range));
-    
-    //samples->SetParameter("SampleDataType","Sv");
-    Subscription::Ptr sp(samples_[sample_data_type]);
-    subscription_manager_->subscribe(sp);
-  }
-  return samples_[sample_data_type];
+  subscribe();
+  Subscription::Ptr sp(subscription);
+  subscription_manager_->subscribe(sp);
 }
 
 void Channel::updateSubscription(Subscription::Ptr& subscription)
@@ -66,33 +55,31 @@ void Channel::updateSubscription(Subscription::Ptr& subscription)
     subscription_manager_->update(subscription);
 }
 
-const ParameterGroup::Map& Channel::getParameters()
+std::shared_ptr<Parameter> Channel::getParameter(std::string name)
 {
-  subscribe();
-  return parameters_;
+  return parameter_manager_->get("TransceiverMgr/"+name_+"/"+name);
 }
 
 void Channel::subscribe()
 {
   if(!subscribed_)
   {
-    parameters_["channel"]->add("frequency","TransceiverMgr/"+name_+"/Frequency");
-    parameters_["channel"]->add("beamType","TransceiverMgr/"+name_+"/BeamType");
-    parameters_["channel"]->add("sampleInterval","TransceiverMgr/"+name_+"/SampleInterval");
-    parameters_["channel"]->add("transmitPower","TransceiverMgr/"+name_+"/TransmitPower");
-    parameters_["channel"]->add("absorptionCoefficient","TransceiverMgr/"+name_+"/AbsorptionCoefficient");
-    parameters_["channel"]->add("soundSpeed","TransceiverMgr/"+name_+"/SoundVelocity");
-    parameters_["channel"]->add("transducerName","TransceiverMgr/"+name_+"/TransducerName");
-    parameters_["channel"]->add("equivalentBeamAngle","TransceiverMgr/"+name_+"/EquivalentBeamAngle");
-    parameters_["channel"]->add("angleSensitivityY","TransceiverMgr/"+name_+"/AngleSensitivityAlongship");
-    parameters_["channel"]->add("angleSensitivityX","TransceiverMgr/"+name_+"/AngleSensitivityAthwartship");
-    parameters_["channel"]->add("beamWidthY","TransceiverMgr/"+name_+"/BeamWidthAlongship");
-    parameters_["channel"]->add("beamWidthX","TransceiverMgr/"+name_+"/BeamWidthAthwartship");
-    parameters_["channel"]->add("directionX","TransceiverMgr/"+name_+"/DirectionX");
-    parameters_["channel"]->add("directionY","TransceiverMgr/"+name_+"/DirectionY");
-    parameters_["channel"]->add("gain","TransceiverMgr/"+name_+"/Gain");
-    parameters_["channel"]->add("pulseLength","TransceiverMgr/"+name_+"/PulseLength");
-    //parameters_["channel"]->add("transducerDepth","TransceiverMgr/"+name_+"/TransducerDepth");
+    parameter_manager_->subscribe("TransceiverMgr/"+name_+"/Frequency");
+    parameter_manager_->subscribe("TransceiverMgr/"+name_+"/BeamType");
+    parameter_manager_->subscribe("TransceiverMgr/"+name_+"/SampleInterval");
+    parameter_manager_->subscribe("TransceiverMgr/"+name_+"/TransmitPower");
+    parameter_manager_->subscribe("TransceiverMgr/"+name_+"/AbsorptionCoefficient");
+    parameter_manager_->subscribe("TransceiverMgr/"+name_+"/SoundVelocity");
+    parameter_manager_->subscribe("TransceiverMgr/"+name_+"/TransducerName");
+    parameter_manager_->subscribe("TransceiverMgr/"+name_+"/EquivalentBeamAngle");
+    parameter_manager_->subscribe("TransceiverMgr/"+name_+"/AngleSensitivityAlongship");
+    parameter_manager_->subscribe("TransceiverMgr/"+name_+"/AngleSensitivityAthwartship");
+    parameter_manager_->subscribe("TransceiverMgr/"+name_+"/BeamWidthAlongship");
+    parameter_manager_->subscribe("TransceiverMgr/"+name_+"/BeamWidthAthwartship");
+    parameter_manager_->subscribe("TransceiverMgr/"+name_+"/DirectionX");
+    parameter_manager_->subscribe("TransceiverMgr/"+name_+"/DirectionY");
+    parameter_manager_->subscribe("TransceiverMgr/"+name_+"/Gain");
+    parameter_manager_->subscribe("TransceiverMgr/"+name_+"/PulseLength");
     subscribed_ = true;
   }
 }

@@ -1,0 +1,18 @@
+<launch>
+  <arg name="mru_transform" default="false"/>
+
+  <param name="robot_description" command="$(find xacro)/xacro $(find simrad_ek80)/urdf/es200-7c.urdf" />
+  <node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher" />
+  <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" />
+  <node name="rviz" pkg="rviz" type="rviz" required="true" />
+
+  <node if="$(arg mru_transform)" name="mru_transform" pkg="mru_transform" type="mru_transform_node">
+    <param name="base_frame" value="ek80_nav"/>
+    <remap from="position" to="out/position"/>
+    <remap from="orientation" to="out/orientation"/>
+    <remap from="velocity" to="out/velocity"/>
+  </node>
+  <node if="$(arg mru_transform)" name="mru_transform_sync" pkg="mru_transform" type="sensor_sync_node">
+    <param name="inTopicPrefix" value="/"/>
+  </node>
+</launch>

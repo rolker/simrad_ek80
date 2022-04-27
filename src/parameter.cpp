@@ -18,9 +18,6 @@ void Parameter::update(const ParameterUpdate& update)
     std::lock_guard<std::mutex> lock(updates_mutex_);
     updates_[t] = update.value;
   }
-  std::lock_guard<std::mutex> lock(callbacks_mutex_);
-  for(auto callback: callbacks_)
-    callback(t);
 }
 
 const Parameter::Info& Parameter::getInfo() const
@@ -34,12 +31,6 @@ TimePoint Parameter::getLatestTime()
   if(!updates_.empty())
     return updates_.rbegin()->first;
   return TimePoint();
-}
-
-void Parameter::addCallback(std::function<void(TimePoint)> callback)
-{
-  std::lock_guard<std::mutex> lock(callbacks_mutex_);
-  callbacks_.push_back(callback);
 }
 
 } // namespace simrad

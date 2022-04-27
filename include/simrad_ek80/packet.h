@@ -126,6 +126,70 @@ struct ProcessedData: public Base
   operator bool() const;
 };
 
+/// Parameter updates
+
+struct RecordHeader
+{
+  unsigned short recID;
+  unsigned short recLen;
+  RecordHeader* next(){return reinterpret_cast<RecordHeader*>((char*)(this)+recLen);}
+};
+
+struct ParameterMessageHeader
+{
+  uint16_t currentMsg;
+  uint16_t totalMsg;
+  int32_t seqNo;
+  int32_t msgID;
+  RecordHeader* records() {return reinterpret_cast<RecordHeader*>(this+1);}
+};
+
+
+struct ParameterDefinitionValue
+{
+    int32_t len;
+    char* value() {return (char*)(this)+sizeof(len);}
+    int Size(){return len+sizeof(len);}
+};
+
+struct ParameterDefinition
+{
+  int32_t cookie;
+  uint64_t timeStamp;
+  ParameterDefinitionValue* value() {return reinterpret_cast<ParameterDefinitionValue*>((char*)(this+1)-sizeof(int32_t));} ;
+  int32_t unused;
+  int Size(){return sizeof(ParameterDefinition) + value()->Size();}
+  ParameterDefinition* next() {return reinterpret_cast<ParameterDefinition*>((char*)(this)+Size() );}
+};
+
+struct ParameterRecord: public RecordHeader
+{
+  int32_t paramCount;
+  ParameterDefinition* parameters() {return reinterpret_cast<ParameterDefinition*>(this+1);}
+};
+
+struct AttributeString
+{
+  int32_t strLen;
+  char * str() {return (char*)(this)+sizeof(strLen);}
+  int Size(){return strLen+sizeof(strLen);}
+};
+
+struct AttributeDefinition
+{
+  int32_t cookie;
+  AttributeString attributeName;
+  int32_t attributeLen() { return *reinterpret_cast<int32_t*>( (uint8_t*)(this)+sizeof(cookie)+attributeName.Size()); }
+  char * attribute() {return reinterpret_cast<char*>(this)+sizeof(cookie)+attributeName.Size()+sizeof(int32_t);}
+  AttributeDefinition* next() {return reinterpret_cast<AttributeDefinition*>(attribute() + attributeLen());}
+}; 
+
+struct AttributeRecord: public RecordHeader
+{
+  int32_t attribCount;
+  AttributeDefinition* attributes() {return reinterpret_cast<AttributeDefinition*>(this+1);};
+};
+
 #pragma pack()
 
 } // namespace packet

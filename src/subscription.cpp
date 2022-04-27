@@ -14,8 +14,8 @@ Subscription::Subscription()
 
 }
 
-Subscription::Subscription(const std::string& type, const std::string& channel, const ParameterGroup::Map& ping_parameters)
-  :type_(type),channel_(channel),ping_parameters_(ping_parameters)
+Subscription::Subscription(const std::string& type, const std::string& channel)
+  :type_(type),channel_(channel)
 {
 }
 
@@ -45,11 +45,6 @@ std::string Subscription::subscribeString()
     for(auto parameter: parameters_)
       ret += ',' + parameter.first + "=" + parameter.second;
   return ret;
-}
-
-const ParameterGroup::Map& Subscription::getPingParameters() const
-{
-  return ping_parameters_;
 }
 
 } // namespace simrad

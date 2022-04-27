@@ -2,63 +2,89 @@
 #include <simrad_ek80/server_manager.h>
 #include <simrad_ek80/client.h>
 #include <acoustic_msgs/RawSonarImage.h>
+#include "geometry_msgs/TwistStamped.h"
+#include "sensor_msgs/NavSatFix.h"
+#include "sensor_msgs/Imu.h"
+#include <tf2/LinearMath/Quaternion.h>
+#include <tf2_geometry_msgs/tf2_geometry_msgs.h>
+#include <rosgraph_msgs/Clock.h>
 
 std::shared_ptr<simrad::ServerManager> server_manager;
 std::shared_ptr<simrad::Client> client;
-std::shared_ptr<simrad::Parameter> latitude_parameter;
-std::shared_ptr<simrad::Parameter> longitude_parameter;
 std::shared_ptr<simrad::SampleSubscription> sample_power_sub;
 std::shared_ptr<simrad::SampleSubscription> sample_tvg20_sub;
+std::shared_ptr<simrad::SampleSubscription::callback_type> power_callback;
+std::shared_ptr<simrad::SampleSubscription::callback_type> tvg20_callback;
 std::map<std::string, std::shared_ptr<simrad::SampleSet> > latest_pings;
-std::map<std::string, simrad::ParameterGroup::Ptr> channel_params;
+
+std::shared_ptr<simrad::ParameterManager> parameter_manager;
+std::shared_ptr<simrad::ParameterManager::callback_type> parameter_updates_callback_ptr;
+
 int id = -1;
 
+bool replay = false;
+
 ros::Publisher sonar_image_pub;
+ros::Publisher position_pub;
+ros::Publisher orientation_pub;
+ros::Publisher velocity_pub;
 
-void position_update_callback(simrad::TimePoint time)
+std::string frame_id = "ek80";
+std::string nav_frame_id = "ek80_nav";
+
+void parameter_update_callback(simrad::TimePoint time)
 {
-  ros::Time rt(std::chrono::duration_cast<std::chrono::milliseconds>(time.time_since_epoch()).count()/1000.0);
-  std::cout << "position callback: " << std::setprecision(13) << rt.toSec() << std::endl;
-  std::cout << "  lat: " << latitude_parameter->get<double>(0.0, time) << " lon: " << longitude_parameter->get<double>(0.0, time) << std::endl;
-}
+  ros::Time rt(std::chrono::duration_cast<std::chrono::nanoseconds>(time.time_since_epoch()).count()/1000000000.0);
+  if(replay)
+    rt = ros::Time::now();
 
-void channel_params_callback(simrad::TimePoint time)
-{
-  ros::Time rt(std::chrono::duration_cast<std::chrono::milliseconds>(time.time_since_epoch()).count()/1000.0);  
-  std::cout << "channel params callback: " << std::setprecision(13) << rt.toSec() << std::endl;
-}
+  sensor_msgs::NavSatFix nsf;
+  nsf.header.stamp = rt;
+  nsf.header.frame_id = nav_frame_id;
+  nsf.latitude = parameter_manager->get("OwnShip/Latitude")->get<double>(0, time);
+  nsf.longitude =  parameter_manager->get("OwnShip/Longitude")->get<double>(0, time);
+  nsf.altitude = parameter_manager->get("OwnShip/Heave")->get<double>(0, time);
 
-void sound_speed_callback(simrad::TimePoint time)
-{
-  ros::Time rt(std::chrono::duration_cast<std::chrono::milliseconds>(time.time_since_epoch()).count()/1000.0);  
-  std::cout << "sound speed callback: " << std::setprecision(13) << rt.toSec() << std::endl;
-}
+  position_pub.publish(nsf);
 
+  tf2::Quaternion q;
+  q.setRPY(parameter_manager->get("OwnShip/Roll")->get<double>(0, time)*M_PI/180.0, parameter_manager->get("OwnShip/Pitch")->get<double>(0, time)*M_PI/180.0, (90.0-parameter_manager->get("OwnShip/Heading")->get<double>(0, time))*M_PI/180.0);
+
+  sensor_msgs::Imu imu;
+  imu.header.stamp = rt;
+  imu.header.frame_id = nav_frame_id;
+  imu.orientation = tf2::toMsg(q);
+  orientation_pub.publish(imu);
+
+  geometry_msgs::TwistStamped ts;
+  ts.header.stamp = rt;
+  ts.header.frame_id = nav_frame_id;
+
+  double course_rad_yaw = (90.0-parameter_manager->get("OwnShip/Course")->get<double>(0, time))*M_PI/180.0;
+  double sog = parameter_manager->get("OwnShip/Speed")->get<double>(0, time);
+  ts.twist.linear.x = sog*cos(course_rad_yaw);
+  ts.twist.linear.y = sog*sin(course_rad_yaw);
+
+  velocity_pub.publish(ts);
+  //std::cout << "sog: " << parameter_manager->get("OwnShip/Speed")->get<double>(0, time) << ", cog: " << parameter_manager->get("OwnShip/Course")->get<double>(0, time) << std::endl;
+}
 
 void ping_callback(std::shared_ptr<simrad::SampleSet> ping)
 {
-  ros::Time rt(std::chrono::duration_cast<std::chrono::milliseconds>(ping->time.time_since_epoch()).count()/1000.0);
-  std::cout << "Ping: " << std::setprecision(13) << rt.toSec() << ", data type: " << ping->dataType << "\n   ";
-  for(int i = 0; i < ping->samples.size(); i++)
-  {
-    std::cout << std::setprecision(4) << simrad::rawToDB(ping->samples[i]) << ", ";
-    if (i == 15 && ping->samples.size() -15 > i)
-    {
-      i = ping->samples.size()-15;
-      std::cout << " ... ";
-    }
-  }
-  std::cout << std::endl;
+  ros::Time rt(std::chrono::duration_cast<std::chrono::nanoseconds>(ping->time.time_since_epoch()).count()/1000000000.0);
+  if(replay)
+    rt = ros::Time::now();
 
   latest_pings[ping->dataType] = ping;
 
   if(latest_pings["Power"] && latest_pings["TVG20"] && latest_pings["Power"]->time == latest_pings["TVG20"]->time)
   {
+    //std::cout << "Ping! " << std::setprecision(13) << rt.toSec() << std::endl;
     auto power = latest_pings["Power"];
     auto tvg = latest_pings["TVG20"];
     auto sample_count = std::min(power->samples.size(), tvg->samples.size());
     acoustic_msgs::RawSonarImage si;
-    si.header.frame_id = "ek80";
+    si.header.frame_id = frame_id;
     si.header.stamp = rt;
     si.ping_info.frequency = power->frequency;
     si.ping_info.sound_speed = power->soundSpeed;
@@ -81,7 +107,7 @@ void ping_callback(std::shared_ptr<simrad::SampleSet> ping)
 }
 
 
-void server_manager_callback(ros::TimerEvent event)
+void server_manager_callback(ros::WallTimerEvent event)
 {
   if(!client)
   {
@@ -89,26 +115,19 @@ void server_manager_callback(ros::TimerEvent event)
     for(auto s: servers)
     {
       std::cout << s.string() << std::endl;
-      if (id < 0 || s.getID() == id)
+      if (!client && (id < 0 || s.getID() == id))
       {
         client = std::make_shared<simrad::Client>(s);
         client->connect();
-        auto platform = client->getPlatform();
-        auto param_groups = platform->getParameters();
-        param_groups["position"]->addCallback(&position_update_callback);
-        latitude_parameter = param_groups["position"]->parameters()["latitude"];
-        longitude_parameter = param_groups["position"]->parameters()["longitude"];
-        auto t = client->getTransducer();
-        auto channels = t->getChannels();
+        auto channels = client->getChannels();
         for(auto c: channels)
           std::cout << "Channel: " << c->getName() << std::endl;
-        sample_power_sub = channels[0]->getSamples(200, "Power");
-        sample_power_sub->addCallback(&ping_callback);
-        sample_tvg20_sub = channels[0]->getSamples(200, "TVG20");
-        sample_tvg20_sub->addCallback(&ping_callback);
-        channel_params = channels[0]->getParameters();
-        channel_params["channel"]->addCallback(&channel_params_callback);
-        channel_params["channel"]->parameters()["soundSpeed"]->addCallback(&sound_speed_callback);
+        sample_power_sub = simrad::SampleSubscription::subscribe(channels[0], 200, "Power");
+        power_callback = sample_power_sub->addCallback(&ping_callback);
+        sample_tvg20_sub = simrad::SampleSubscription::subscribe(channels[0], 200, "TVG20");
+        tvg20_callback = sample_tvg20_sub->addCallback(&ping_callback);
+        parameter_manager = client->getParameterManager();
+        parameter_updates_callback_ptr = parameter_manager->addCallback(&parameter_update_callback);
       }
     }
   }
@@ -125,12 +144,17 @@ int main(int argc, char **argv)
     ros::param::get("~remote_addresses", addresses);
 
   id = ros::param::param("~id", id);
+  replay = ros::param::param("~replay", replay);
+  std::cout << "replay? " << replay << std::endl;
 
   sonar_image_pub = nh.advertise<acoustic_msgs::RawSonarImage>("sonar_image", 10);
+  position_pub = nh.advertise<sensor_msgs::NavSatFix>("position", 10);
+  orientation_pub = nh.advertise<sensor_msgs::Imu>("orientation", 10);
+  velocity_pub = nh.advertise<geometry_msgs::TwistStamped>("velocity", 10);
 
   server_manager = std::make_shared<simrad::ServerManager>(addresses);
 
-  ros::Timer server_manager_timer = nh.createTimer(ros::Duration(.5), &server_manager_callback);
+  ros::WallTimer server_manager_timer = nh.createWallTimer(ros::WallDuration(.5), &server_manager_callback);
 
   ros::spin();
 

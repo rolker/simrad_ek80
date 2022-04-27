@@ -3,13 +3,13 @@
 
 #include <simrad_ek80/request.h>
 #include <simrad_ek80/connection.h>
-#include <simrad_ek80/subscription_port.h>
+#include <simrad_ek80/udp_socket.h>
 #include <simrad_ek80/subscription.h>
 
 namespace simrad
 {
 
-class SubscriptionManager
+class SubscriptionManager: public UDPSocket
 {
 public:
   typedef std::shared_ptr<SubscriptionManager> Ptr;
@@ -23,11 +23,10 @@ public:
                 
   void unsubscribe(Subscription::Ptr& subscription);
                 
-  void packet_callback(const std::vector<uint8_t>& packet);
 private:
-  Connection::Ptr connection_;
+  void receivePacket(const std::vector<uint8_t>& packet) override;
 
-  SubscriptionPort::Ptr port_;
+  Connection::Ptr connection_;
 
   std::mutex subscriptions_mutex_;
   std::map<int, Subscription::Ptr> subscriptions_;

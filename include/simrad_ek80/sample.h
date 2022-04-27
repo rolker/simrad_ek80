@@ -1,11 +1,15 @@
 #ifndef SIMRAD_EK80_SAMPLE_H
 #define SIMRAD_EK80_SAMPLE_H
 
-#include <simrad_ek80/subscription.h>
 #include <list>
+#include <simrad_ek80/subscription.h>
+#include <simrad_ek80/utilities.h>
+#include <simrad_ek80/callbacks.h>
 
 namespace simrad
 {
+
+class Channel;
 
 struct SampleSet
 {
@@ -23,21 +27,21 @@ struct SampleSet
   typedef std::shared_ptr<SampleSet> Ptr;
 };
 
-class SampleSubscription: public Subscription
+class SampleSubscription: public Subscription, public Callbacks<std::shared_ptr<SampleSet> >
 {
 public:
   typedef std::shared_ptr<SampleSubscription> Ptr;
 
-  SampleSubscription(std::string channel, const ParameterGroup::Map& ping_parameters, std::string sample_data_type);
+  SampleSubscription(std::shared_ptr<Channel> channel, std::string sample_data_type);
+
+  static Ptr subscribe(std::shared_ptr<Channel> channel, float range = 250.0, std::string sample_data_type = "Power");
 
   void addData(std::shared_ptr<std::vector<unsigned char> >& data) override;
 
-  void addCallback(std::function<void(std::shared_ptr<SampleSet>)> callback);
-
 private:            
-  std::vector<std::function<void(std::shared_ptr<SampleSet>)> > callbacks_;
-  std::mutex callbacks_mutex_;
+
   std::string sample_data_type_;
+  std::shared_ptr<Channel> channel_;
 };
 
 } // namespace simrad

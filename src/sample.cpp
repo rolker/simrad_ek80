@@ -1,13 +1,23 @@
 #include <simrad_ek80/sample.h>
+#include <simrad_ek80/channel.h>
 #include <cmath>
 #include <iostream>
 
 namespace simrad
 {
 
-SampleSubscription::SampleSubscription(std::string channel, const ParameterGroup::Map& ping_parameters, std::string sample_data_type)
-  :Subscription("SampleData", channel, ping_parameters), sample_data_type_(sample_data_type)
+SampleSubscription::SampleSubscription(std::shared_ptr<Channel> channel, std::string sample_data_type)
+  :Subscription("SampleData", channel->getName()), sample_data_type_(sample_data_type), channel_(channel)
 {
+}
+
+std::shared_ptr<SampleSubscription> SampleSubscription::subscribe(std::shared_ptr<Channel> channel, float range, std::string sample_data_type)
+{
+  auto sub = std::make_shared<SampleSubscription>(channel, sample_data_type);
+  sub->setParameter("SampleDataType", sample_data_type);
+  sub->setParameter("Range", std::to_string(range));
+  channel->subscribe(sub);
+  return sub;
 }
 
 void SampleSubscription::addData(std::shared_ptr<std::vector<unsigned char> > &data)
@@ -24,37 +34,22 @@ void SampleSubscription::addData(std::shared_ptr<std::vector<unsigned char> > &d
   if(data->size())
   {
     SampleData * d = reinterpret_cast<SampleData *>(&data->front());
-      
-    double interval = (*ping_parameters_["channel"])["sampleInterval"]->get<double>(std::nan(""));
-    double sspeed = (*ping_parameters_["channel"])["soundSpeed"]->get<double>(std::nan(""));
+
+    double interval = channel_->getParameter("SampleInterval")->get<double>(std::nan(""));
+    double sspeed = channel_->getParameter("SoundVelocity")->get<double>(std::nan(""));
     double depth = 0.0;
-    //if((*ping_parameters_["channel"])["transducerDepth"])
-    //  depth = (*ping_parameters_["channel"])["transducerDepth"]->get<double>(depth);
-      
-    // double dirX = 0.0;
-    // if((*pingParameters["channel"])["directionX"])
-    //     dirX = (*pingParameters["channel"])["directionX"]->Get<double>(Nan<double>());
-    
-    // double dirY = 0.0;
-    // if((*pingParameters["channel"])["directionY"])
-    //     dirY = (*pingParameters["channel"])["directionY"]->Get<double>(Nan<double>());
-    
-    // Rotation<double> roll (-Angle<double,Radian>(dirX),Point<double>(0.0,1.0,0.0));
-    // Rotation<double> pitch (Angle<double,Radian>(dirY),Point<double>(1.0,1.0,0.0));
-    
-    // Point<double> unitVec = pitch(roll(Point<double>(0.0,0.0,interval*sspeed)));
     
     SampleSet::Ptr ss(new SampleSet);
     ss->time = fromSimradTime(d->time);
-    ss->frequency = (*ping_parameters_["channel"])["frequency"]->get<double>(0.0);
+    ss->frequency = channel_->getParameter("Frequency")->get<double>(0.0);
     ss->z1 = -depth;
     ss->sampleInterval = interval;
     ss->soundSpeed = sspeed;
     ss->dataType = sample_data_type_;
-    ss->beamWidthX = (*ping_parameters_["channel"])["beamWidthX"]->get<double>(0.0);
-    ss->beamWidthY = (*ping_parameters_["channel"])["beamWidthY"]->get<double>(0.0);
-    ss->directionX = (*ping_parameters_["channel"])["directionX"]->get<double>(0.0);
-    ss->directionY = (*ping_parameters_["channel"])["directionY"]->get<double>(0.0);
+    ss->beamWidthX = channel_->getParameter("BeamWidthAthwartship")->get<double>(0.0);
+    ss->beamWidthY = channel_->getParameter("BeamWidthAlongship")->get<double>(0.0);
+    ss->directionX = channel_->getParameter("DirectionX")->get<double>(0.0);
+    ss->directionY = channel_->getParameter("DirectionY")->get<double>(0.0);
     
     int count = (data->size()-sizeof(uint64_t))/sizeof(uint16_t);
     
@@ -62,16 +57,8 @@ void SampleSubscription::addData(std::shared_ptr<std::vector<unsigned char> > &d
     {
         ss->samples.push_back(d->data[i]);
     }
-    std::lock_guard<std::mutex> lock(callbacks_mutex_);
-    for(auto callback: callbacks_)
-      callback(ss);
+    callCallbacks(ss);
   }
-}
-
-void SampleSubscription::addCallback(std::function<void(std::shared_ptr<SampleSet>)> callback)
-{
-  std::lock_guard<std::mutex> lock(callbacks_mutex_);
-  callbacks_.push_back(callback);
 }
 
 } // namespace simrad
