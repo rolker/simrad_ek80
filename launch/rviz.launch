@@ -1,10 +1,11 @@
 <launch>
   <arg name="mru_transform" default="false"/>
+  <arg name="rvizconfig" default="$(find simrad_ek80)/config/ek80.rviz" />
 
   <param name="robot_description" command="$(find xacro)/xacro $(find simrad_ek80)/urdf/es200-7c.urdf" />
   <node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher" />
   <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" />
-  <node name="rviz" pkg="rviz" type="rviz" required="true" />
+  <node name="rviz" pkg="rviz" type="rviz" args="-d $(arg rvizconfig)" required="true" />
 
   <node if="$(arg mru_transform)" name="mru_transform" pkg="mru_transform" type="mru_transform_node">
     <param name="base_frame" value="ek80_nav"/>
