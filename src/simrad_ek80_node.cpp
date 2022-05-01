@@ -21,6 +21,7 @@ std::shared_ptr<simrad::ParameterManager> parameter_manager;
 std::shared_ptr<simrad::ParameterManager::callback_type> parameter_updates_callback_ptr;
 
 int id = -1;
+float range= 0.0;
 
 bool replay = false;
 
@@ -112,6 +113,8 @@ void server_manager_callback(ros::WallTimerEvent event)
   if(!client)
   {
     auto servers = server_manager->getList();
+    if(servers.empty())
+      std::cout << "No servers found." << std::endl;
     for(auto s: servers)
     {
       std::cout << s.string() << std::endl;
@@ -122,10 +125,13 @@ void server_manager_callback(ros::WallTimerEvent event)
         auto channels = client->getChannels();
         for(auto c: channels)
           std::cout << "Channel: " << c->getName() << std::endl;
-        sample_power_sub = simrad::SampleSubscription::subscribe(channels[0], 200, "Power");
-        power_callback = sample_power_sub->addCallback(&ping_callback);
-        sample_tvg20_sub = simrad::SampleSubscription::subscribe(channels[0], 200, "TVG20");
-        tvg20_callback = sample_tvg20_sub->addCallback(&ping_callback);
+        if(range > 0.0)
+        {
+          sample_power_sub = simrad::SampleSubscription::subscribe(channels[0], range, "Power");
+          power_callback = sample_power_sub->addCallback(&ping_callback);
+          sample_tvg20_sub = simrad::SampleSubscription::subscribe(channels[0], range, "TVG20");
+          tvg20_callback = sample_tvg20_sub->addCallback(&ping_callback);
+        }
         parameter_manager = client->getParameterManager();
         parameter_updates_callback_ptr = parameter_manager->addCallback(&parameter_update_callback);
       }
@@ -144,6 +150,7 @@ int main(int argc, char **argv)
     ros::param::get("~remote_addresses", addresses);
 
   id = ros::param::param("~id", id);
+  range = ros::param::param("~range", range);
   replay = ros::param::param("~replay", replay);
   std::cout << "replay? " << replay << std::endl;
 
