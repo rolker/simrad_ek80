@@ -6,6 +6,8 @@
 #include <arpa/inet.h>
 #include <algorithm>
 
+//#include <iostream>
+
 namespace simrad
 {
 
@@ -15,7 +17,8 @@ TimePoint fromSimradTime(uint64_t t)
   // 100 nanosecond intervals since January 1, 1601.
   // This is the internal "filetime" used by the Windows
   // operating systems.
-  if(t == 0)
+  //std::cerr << "simrad time to unix: " << t << " -> " << std::chrono::duration_cast<std::chrono::seconds>(TimePoint(std::chrono::nanoseconds((t-0x019db1ded53e8000ULL)*100)).time_since_epoch()).count() << std::endl;
+  if(t < 0x019db1ded53e8000ULL)
     return TimePoint();
   return TimePoint(std::chrono::nanoseconds((t-0x019db1ded53e8000ULL)*100));
 }
