@@ -89,13 +89,18 @@ void ping_callback(std::shared_ptr<simrad::SampleSet> ping)
     si.header.stamp = rt;
     si.ping_info.frequency = power->frequency;
     si.ping_info.sound_speed = power->soundSpeed;
+
     si.ping_info.rx_beamwidths.push_back(power->beamWidthX*M_PI/180.0);
     si.ping_info.tx_beamwidths.push_back(power->beamWidthY*M_PI/180.0);
+
+    // "Positive numbers denotes the fore and starboard directions"
+    // Ek80 interface doc, p.196
     si.rx_angles.push_back(power->directionX*M_PI/180.0);
     si.tx_angles.push_back(power->directionY*M_PI/180.0);
     si.sample_rate = 1.0/power->sampleInterval;
     si.tx_delays.push_back(0.0);
     si.samples_per_beam = sample_count;
+    si.image.num_beams = 1;
     si.image.dtype = acoustic_msgs::SonarImageData::DTYPE_FLOAT32;
     si.image.data.resize(4*sample_count);
     std::vector<float> samples(sample_count);
