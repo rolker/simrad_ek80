@@ -35,6 +35,7 @@ std::string nav_frame_id = "ek80_nav";
 
 void parameter_update_callback(simrad::TimePoint time)
 {
+  //std::cerr << "time: " << std::chrono::duration_cast<std::chrono::seconds>(time.time_since_epoch()).count() << std::endl;
   ros::Time rt(std::chrono::duration_cast<std::chrono::nanoseconds>(time.time_since_epoch()).count()/1000000000.0);
   if(replay)
     rt = ros::Time::now();
@@ -155,6 +156,7 @@ int main(int argc, char **argv)
     ros::param::get("~remote_addresses", addresses);
 
   id = ros::param::param("~id", id);
+  frame_id = ros::param::param("~frame_id", frame_id);
   range = ros::param::param("~range", range);
   replay = ros::param::param("~replay", replay);
   std::cout << "replay? " << replay << std::endl;
