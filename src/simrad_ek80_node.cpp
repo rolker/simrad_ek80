@@ -101,7 +101,7 @@ void ping_callback(std::shared_ptr<simrad::SampleSet> ping)
     si.sample_rate = 1.0/power->sampleInterval;
     si.tx_delays.push_back(0.0);
     si.samples_per_beam = sample_count;
-    si.image.num_beams = 1;
+    si.image.beam_count = 1;
     si.image.dtype = acoustic_msgs::SonarImageData::DTYPE_FLOAT32;
     si.image.data.resize(4*sample_count);
     std::vector<float> samples(sample_count);
