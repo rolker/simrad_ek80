@@ -8,6 +8,7 @@
 #include <tf2/LinearMath/Quaternion.h>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 #include <rosgraph_msgs/Clock.h>
+#include <rosbag/bag.h>
 
 std::shared_ptr<simrad::ServerManager> server_manager;
 std::shared_ptr<simrad::Client> client;
@@ -33,6 +34,9 @@ ros::Publisher velocity_pub;
 std::string frame_id = "ek80";
 std::string nav_frame_id = "ek80_nav";
 
+std::string bag_file;
+std::shared_ptr<rosbag::Bag> bag;
+
 void parameter_update_callback(simrad::TimePoint time)
 {
   //std::cerr << "time: " << std::chrono::duration_cast<std::chrono::seconds>(time.time_since_epoch()).count() << std::endl;
@@ -43,11 +47,16 @@ void parameter_update_callback(simrad::TimePoint time)
   sensor_msgs::NavSatFix nsf;
   nsf.header.stamp = rt;
   nsf.header.frame_id = nav_frame_id;
-  nsf.latitude = parameter_manager->get("OwnShip/Latitude")->get<double>(0, time);
-  nsf.longitude =  parameter_manager->get("OwnShip/Longitude")->get<double>(0, time);
+  nsf.latitude = parameter_manager->get("OwnShip/Latitude")->get<double>(-999, time);
+  nsf.longitude =  parameter_manager->get("OwnShip/Longitude")->get<double>(-999, time);
   nsf.altitude = parameter_manager->get("OwnShip/Heave")->get<double>(0, time);
 
-  position_pub.publish(nsf);
+  if(nsf.latitude != -90.0 && nsf.latitude <= 90.0 && nsf.longitude >= -180.0 && nsf.longitude <= 180.0)
+  {
+    position_pub.publish(nsf);
+    if(bag)
+      bag->write("position", nsf.header.stamp, nsf);
+  }
 
   tf2::Quaternion q;
   q.setRPY(parameter_manager->get("OwnShip/Roll")->get<double>(0, time)*M_PI/180.0, parameter_manager->get("OwnShip/Pitch")->get<double>(0, time)*M_PI/180.0, (90.0-parameter_manager->get("OwnShip/Heading")->get<double>(0, time))*M_PI/180.0);
@@ -57,6 +66,8 @@ void parameter_update_callback(simrad::TimePoint time)
   imu.header.frame_id = nav_frame_id;
   imu.orientation = tf2::toMsg(q);
   orientation_pub.publish(imu);
+  if(bag)
+    bag->write("orientation", imu.header.stamp, imu);
 
   geometry_msgs::TwistStamped ts;
   ts.header.stamp = rt;
@@ -68,6 +79,9 @@ void parameter_update_callback(simrad::TimePoint time)
   ts.twist.linear.y = sog*sin(course_rad_yaw);
 
   velocity_pub.publish(ts);
+  if(bag)
+    bag->write("velocity", ts.header.stamp, ts);
+
   //std::cout << "sog: " << parameter_manager->get("OwnShip/Speed")->get<double>(0, time) << ", cog: " << parameter_manager->get("OwnShip/Course")->get<double>(0, time) << std::endl;
 }
 
@@ -109,8 +123,9 @@ void ping_callback(std::shared_ptr<simrad::SampleSet> ping)
       samples[i] = simrad::rawToDB(power->samples[i]) + simrad::rawToDB(tvg->samples[i]);
     memcpy(si.image.data.data(), samples.data(), si.image.data.size());
     sonar_image_pub.publish(si);
+    if(bag)
+      bag->write("sonar_image", si.header.stamp, si);
   }
-
 }
 
 
@@ -160,6 +175,14 @@ int main(int argc, char **argv)
   range = ros::param::param("~range", range);
   replay = ros::param::param("~replay", replay);
   std::cout << "replay? " << replay << std::endl;
+
+  bag_file = ros::param::param("~bag_file", bag_file);
+
+  if(!bag_file.empty())
+  {
+    bag = std::make_shared<rosbag::Bag>();
+    bag->open(bag_file, rosbag::bagmode::Write);
+  }
 
   sonar_image_pub = nh.advertise<acoustic_msgs::RawSonarImage>("sonar_image", 10);
   position_pub = nh.advertise<sensor_msgs::NavSatFix>("position", 10);

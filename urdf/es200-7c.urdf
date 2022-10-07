@@ -1,8 +1,9 @@
 <?xml version="1.0"?>
 <robot name="simrad_es200-7c">
 
-  <link name="ek80_nav">
+  <link name="ek80_nav_level">
     <visual>
+      <geometry/>
     </visual>
   </link>
 
@@ -11,13 +12,13 @@
       <geometry>
         <cylinder length="0.0752" radius="0.06"/>
       </geometry>
-      <origin rpy="0 1.57075 0" xyz="-0.0376 0 0"/>
+      <origin rpy="0 0 0" xyz="0 0 -0.0376"/>
     </visual>
   </link>
 
   <joint name="nav_to_transducer" type="fixed">
-    <parent link="ek80_nav"/>
+    <parent link="ek80_nav_level"/>
     <child link="ek80"/>
-    <origin rpy="0 1.57075 0"/>
+    <origin rpy="3.1415 0 0"/>
   </joint>
 </robot>

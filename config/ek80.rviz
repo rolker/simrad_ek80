@@ -138,10 +138,10 @@ Visualization Manager:
       Name: Grid
       Normal Cell Count: 0
       Offset:
-        X: 50
+        X: 0
         Y: 0
-        Z: 0
-      Plane: XY
+        Z: 50
+      Plane: YZ
       Plane Cell Count: 10
       Reference Frame: ek80
       Value: true
@@ -173,7 +173,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 75.80541229248047
+      Distance: 256.1750793457031
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -189,9 +189,9 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.13539990782737732
+      Pitch: 0.13979731500148773
       Target Frame: ek80_nav_north_up
-      Yaw: 1.2254002094268799
+      Yaw: 0.12540866434574127
     Saved: ~
 Window Geometry:
   Displays:
@@ -210,4 +210,4 @@ Window Geometry:
     collapsed: false
   Width: 1839
   X: 674
-  Y: 192
+  Y: 155
