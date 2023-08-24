@@ -11,7 +11,7 @@
   <buildtool_depend>catkin</buildtool_depend>
   <build_depend>libpcl-all-dev</build_depend>
   <exec_depend>libpcl-all</exec_depend>
-  <depend>acoustic_msgs</depend>
+  <depend>marine_acoustic_msgs</depend>
   <depend>pcl_ros</depend>
   <depend>rosbag</depend>
   <depend>roscpp</depend>

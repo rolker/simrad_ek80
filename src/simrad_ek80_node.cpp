@@ -1,7 +1,7 @@
 #include <ros/ros.h>
 #include <simrad_ek80/server_manager.h>
 #include <simrad_ek80/client.h>
-#include <acoustic_msgs/RawSonarImage.h>
+#include <marine_acoustic_msgs/RawSonarImage.h>
 #include "geometry_msgs/TwistStamped.h"
 #include "sensor_msgs/NavSatFix.h"
 #include "sensor_msgs/Imu.h"
@@ -99,7 +99,7 @@ void ping_callback(std::shared_ptr<simrad::SampleSet> ping)
     auto power = latest_pings["Power"];
     auto tvg = latest_pings["TVG20"];
     auto sample_count = std::min(power->samples.size(), tvg->samples.size());
-    acoustic_msgs::RawSonarImage si;
+    marine_acoustic_msgs::RawSonarImage si;
     si.header.frame_id = frame_id;
     si.header.stamp = rt;
     si.ping_info.frequency = power->frequency;
@@ -116,7 +116,7 @@ void ping_callback(std::shared_ptr<simrad::SampleSet> ping)
     si.tx_delays.push_back(0.0);
     si.samples_per_beam = sample_count;
     si.image.beam_count = 1;
-    si.image.dtype = acoustic_msgs::SonarImageData::DTYPE_FLOAT32;
+    si.image.dtype = marine_acoustic_msgs::SonarImageData::DTYPE_FLOAT32;
     si.image.data.resize(4*sample_count);
     std::vector<float> samples(sample_count);
     for(int i = 0; i < sample_count; i++)
@@ -184,7 +184,7 @@ int main(int argc, char **argv)
     bag->open(bag_file, rosbag::bagmode::Write);
   }
 
-  sonar_image_pub = nh.advertise<acoustic_msgs::RawSonarImage>("sonar_image", 10);
+  sonar_image_pub = nh.advertise<marine_acoustic_msgs::RawSonarImage>("sonar_image", 10);
   position_pub = nh.advertise<sensor_msgs::NavSatFix>("position", 10);
   orientation_pub = nh.advertise<sensor_msgs::Imu>("orientation", 10);
   velocity_pub = nh.advertise<geometry_msgs::TwistStamped>("velocity", 10);

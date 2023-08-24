@@ -4,7 +4,7 @@ project(simrad_ek80)
 add_compile_options(-std=c++14)
 
 find_package(catkin REQUIRED COMPONENTS
-  acoustic_msgs
+  marine_acoustic_msgs
   pcl_ros
   rosbag
   roscpp
@@ -13,7 +13,7 @@ find_package(catkin REQUIRED COMPONENTS
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES 
-CATKIN_DEPENDS acoustic_msgs pcl_ros rosbag
+CATKIN_DEPENDS marine_acoustic_msgs pcl_ros rosbag
 #  DEPENDS system_lib
 )
 

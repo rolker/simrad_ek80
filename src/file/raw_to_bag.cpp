@@ -2,7 +2,7 @@
 #include <vector>
 #include <simrad_ek80/file/raw_file.h>
 #include <simrad_ek80/file/ek80.h>
-#include <acoustic_msgs/RawSonarImage.h>
+#include <marine_acoustic_msgs/RawSonarImage.h>
 #include <rosbag/bag.h>
 
 int main(int argc, char **argv)
@@ -44,9 +44,9 @@ int main(int argc, char **argv)
       {
         auto sample = file.asType<simrad::file::SampleDatagram3>(packet);
         auto ping = ek.samplesToPowers(*sample);
-        acoustic_msgs::RawSonarImage rsi;
+        marine_acoustic_msgs::RawSonarImage rsi;
         rsi.image.beam_count = 1;
-        rsi.image.dtype = acoustic_msgs::SonarImageData::DTYPE_FLOAT32;
+        rsi.image.dtype = marine_acoustic_msgs::SonarImageData::DTYPE_FLOAT32;
         rsi.image.data.resize(ping.samples.size()*4);
         std::memcpy(&rsi.image.data.front(), reinterpret_cast<const uint8_t*>(&ping.samples.front()), rsi.image.data.size());
         rsi.rx_angles.push_back(0.0);

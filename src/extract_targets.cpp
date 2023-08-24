@@ -1,5 +1,5 @@
 #include <ros/ros.h>
-#include <acoustic_msgs/RawSonarImage.h>
+#include <marine_acoustic_msgs/RawSonarImage.h>
 #include <sensor_msgs/PointCloud2.h>
 #include <pcl_ros/point_cloud.h>
 
@@ -12,11 +12,11 @@ float threshold = -75.0;
 std::string csv_out;
 std::ofstream csv_out_stream;
 
-void sonarCallback(const acoustic_msgs::RawSonarImage::ConstPtr &msg)
+void sonarCallback(const marine_acoustic_msgs::RawSonarImage::ConstPtr &msg)
 {
   switch(msg->image.dtype)
   {
-    case acoustic_msgs::SonarImageData::DTYPE_FLOAT32:
+    case marine_acoustic_msgs::SonarImageData::DTYPE_FLOAT32:
     {
       pcl::PointCloud<pcl::PointXYZI> out;
       out.is_dense = false;
