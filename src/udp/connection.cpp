@@ -1,4 +1,4 @@
-#include<simrad_ek80/connection.h>
+#include<simrad_ek80/udp/connection.h>
 #include <cstring>
 #include <cmath>
 #include <poll.h>

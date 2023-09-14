@@ -1,4 +1,4 @@
-#include <simrad_ek80/server_manager.h>
+#include <simrad_ek80/udp/server_manager.h>
 
 #include <sys/socket.h>
 #include <netdb.h>

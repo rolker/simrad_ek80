@@ -1,7 +1,7 @@
 #ifndef SIMRAD_EK80_SERVER_H
 #define SIMRAD_EK80_SERVER_H
 
-#include <simrad_ek80/packet.h>
+#include <simrad_ek80/udp/packet.h>
 #include <netdb.h>
 
 namespace simrad

@@ -1,4 +1,4 @@
-#include <simrad_ek80/udp_socket.h>
+#include <simrad_ek80/udp/udp_socket.h>
 
 #include <simrad_ek80/utilities.h>
 #include <cstring>

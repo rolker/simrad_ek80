@@ -1,4 +1,4 @@
-#include <simrad_ek80/server.h>
+#include <simrad_ek80/udp/server.h>
 #include <sstream>
 #include <cstring>
 #include <arpa/inet.h>

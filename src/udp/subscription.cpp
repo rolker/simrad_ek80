@@ -1,4 +1,4 @@
-#include <simrad_ek80/subscription.h>
+#include <simrad_ek80/udp/subscription.h>
 
 namespace simrad
 

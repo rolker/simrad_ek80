@@ -2,7 +2,7 @@
 #define SIMRAD_EK80_PARAMETER_H
 
 #include <simrad_ek80/utilities.h>
-#include <simrad_ek80/parameter_update.h>
+#include <simrad_ek80/udp/parameter_update.h>
 #include <queue>
 #include <mutex>
 #include <memory>

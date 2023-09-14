@@ -1,4 +1,4 @@
-#include <simrad_ek80/parameter.h>
+#include <simrad_ek80/udp/parameter.h>
 
 namespace simrad
 {

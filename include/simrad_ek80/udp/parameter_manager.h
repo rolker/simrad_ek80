@@ -1,11 +1,11 @@
 #ifndef SIMRAD_EK80_PARAMETER_MANAGER_H
 #define SIMRAD_EK80_PARAMETER_MANAGER_H
 
-#include <simrad_ek80/parameter.h>
-#include <simrad_ek80/udp_socket.h>
-#include <simrad_ek80/connection.h>
-#include <simrad_ek80/request.h>
-#include <simrad_ek80/callbacks.h>
+#include <simrad_ek80/udp/parameter.h>
+#include <simrad_ek80/udp/udp_socket.h>
+#include <simrad_ek80/udp/connection.h>
+#include <simrad_ek80/udp/request.h>
+#include <simrad_ek80/udp/callbacks.h>
 
 namespace simrad
 {

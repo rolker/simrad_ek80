@@ -1,8 +1,8 @@
 #ifndef SIMRAD_EK80_REQUEST_H
 #define SIMRAD_EK80_REQUEST_H
 
-#include <simrad_ek80/connection.h>
-#include <simrad_ek80/response.h>
+#include <simrad_ek80/udp/connection.h>
+#include <simrad_ek80/udp/response.h>
 #include <boost/property_tree/xml_parser.hpp>
 
 namespace simrad

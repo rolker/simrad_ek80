@@ -1,9 +1,9 @@
 #ifndef SIMRAD_EK80_CHANNEL_H
 #define SIMRAD_EK80_CHANNEL_H
 
-#include <simrad_ek80/parameter_manager.h>
-#include <simrad_ek80/subscription_manager.h>
-#include <simrad_ek80/sample.h>
+#include <simrad_ek80/udp/parameter_manager.h>
+#include <simrad_ek80/udp/subscription_manager.h>
+#include <simrad_ek80/udp/sample.h>
 
 namespace simrad
 {

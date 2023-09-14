@@ -1,4 +1,4 @@
-#include <simrad_ek80/channel.h>
+#include <simrad_ek80/udp/channel.h>
 
 namespace simrad
 {

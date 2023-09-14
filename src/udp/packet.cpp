@@ -1,4 +1,4 @@
-#include <simrad_ek80/packet.h>
+#include <simrad_ek80/udp/packet.h>
 #include <cstring>
 #include <sstream>
 #include <iostream>

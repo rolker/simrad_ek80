@@ -1,5 +1,5 @@
-#include <simrad_ek80/sample.h>
-#include <simrad_ek80/channel.h>
+#include <simrad_ek80/udp/sample.h>
+#include <simrad_ek80/udp/channel.h>
 #include <cmath>
 #include <iostream>
 

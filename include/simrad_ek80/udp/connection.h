@@ -4,8 +4,8 @@
 #include <thread>
 #include <mutex>
 #include <condition_variable>
-#include <simrad_ek80/packet.h>
-#include <simrad_ek80/udp_socket.h>
+#include <simrad_ek80/udp/packet.h>
+#include <simrad_ek80/udp/udp_socket.h>
 
 namespace simrad
 {

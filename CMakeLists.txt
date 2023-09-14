@@ -23,21 +23,22 @@ include_directories(
 )
 
 set (SOURCES
-  src/channel.cpp
-  src/client.cpp
-  src/connection.cpp
-  src/packet.cpp
-  src/parameter.cpp
-  src/parameter_manager.cpp
-  src/request.cpp
-  src/response.cpp
-  src/sample.cpp
-  src/server.cpp
-  src/server_manager.cpp
+  src/ping_publisher.cpp
   src/simrad_ek80_node.cpp
-  src/subscription.cpp
-  src/subscription_manager.cpp
-  src/udp_socket.cpp
+  src/udp/channel.cpp
+  src/udp/client.cpp
+  src/udp/connection.cpp
+  src/udp/packet.cpp
+  src/udp/parameter.cpp
+  src/udp/parameter_manager.cpp
+  src/udp/request.cpp
+  src/udp/response.cpp
+  src/udp/sample.cpp
+  src/udp/server.cpp
+  src/udp/server_manager.cpp
+  src/udp/subscription.cpp
+  src/udp/subscription_manager.cpp
+  src/udp/udp_socket.cpp
   src/utilities.cpp
 )
 

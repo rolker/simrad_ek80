@@ -1,10 +1,10 @@
 #ifndef SIMRAD_EK80_SUBSCRIPTION_MANAGER_H
 #define SIMRAD_EK80_SUBSCRIPTION_MANAGER_H
 
-#include <simrad_ek80/request.h>
-#include <simrad_ek80/connection.h>
-#include <simrad_ek80/udp_socket.h>
-#include <simrad_ek80/subscription.h>
+#include <simrad_ek80/udp/request.h>
+#include <simrad_ek80/udp/connection.h>
+#include <simrad_ek80/udp/udp_socket.h>
+#include <simrad_ek80/udp/subscription.h>
 
 namespace simrad
 {

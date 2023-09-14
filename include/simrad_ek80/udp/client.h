@@ -2,16 +2,16 @@
 #define SIMRAD_EK80_CLIENT_H
 
 #include <memory>
-#include <simrad_ek80/server.h>
-#include <simrad_ek80/connection.h>
-#include <simrad_ek80/parameter_manager.h>
-#include <simrad_ek80/channel.h>
+#include <simrad_ek80/udp/server.h>
+#include <simrad_ek80/udp/connection.h>
+#include <simrad_ek80/udp/parameter_manager.h>
+#include <simrad_ek80/udp/channel.h>
 
 namespace simrad
 {
 
 /// Represents a client session with a Simrad server.
-/// Establishes a connection and initiates managers for paramters and subscriptions.
+/// Establishes a connection and initiates managers for parameters and subscriptions.
 class Client
 {
 public:

@@ -2,9 +2,9 @@
 #define SIMRAD_EK80_SAMPLE_H
 
 #include <list>
-#include <simrad_ek80/subscription.h>
+#include <simrad_ek80/udp/subscription.h>
 #include <simrad_ek80/utilities.h>
-#include <simrad_ek80/callbacks.h>
+#include <simrad_ek80/udp/callbacks.h>
 
 namespace simrad
 {

@@ -5,7 +5,7 @@
 #include <thread>
 #include <mutex>
 #include <boost/property_tree/xml_parser.hpp>
-#include <simrad_ek80/server.h>
+#include <simrad_ek80/udp/server.h>
 
 namespace simrad
 {
