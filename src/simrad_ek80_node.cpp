@@ -121,8 +121,9 @@ int main(int argc, char **argv)
   id = ros::param::param("~id", id);
   frame_id = ros::param::param("~frame_id", frame_id);
   range = ros::param::param("~range", range);
+  ROS_INFO_STREAM("range: " << range);
   replay = ros::param::param("~replay", replay);
-  std::cout << "replay? " << replay << std::endl;
+  ROS_INFO_STREAM("replay? " << replay);
 
   bag_file = ros::param::param("~bag_file", bag_file);
 
