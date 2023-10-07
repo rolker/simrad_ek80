@@ -87,7 +87,7 @@ void server_manager_callback(ros::WallTimerEvent event)
   {
     auto servers = server_manager->getList();
     if(servers.empty())
-      std::cout << "No servers found." << std::endl;
+      ROS_WARN_STREAM_DELAYED_THROTTLE(5.0,"No servers found.");
     for(auto s: servers)
     {
       std::cout << s.string() << std::endl;
