@@ -6,18 +6,12 @@
 namespace simrad
 {
 
-SampleSubscription::SampleSubscription(std::shared_ptr<Channel> channel, std::string sample_data_type)
-  :Subscription("SampleData", channel->getName()), sample_data_type_(sample_data_type), channel_(channel)
+SampleSubscription::SampleSubscription(const Channel& channel, int range, std::string sample_data_type, int start_range)
+  :Subscription("SampleData", channel.name()), range_(range), start_range_(start_range), sample_data_type_(sample_data_type), channel_(channel)
 {
-}
-
-std::shared_ptr<SampleSubscription> SampleSubscription::subscribe(std::shared_ptr<Channel> channel, float range, std::string sample_data_type)
-{
-  auto sub = std::make_shared<SampleSubscription>(channel, sample_data_type);
-  sub->setParameter("SampleDataType", sample_data_type);
-  sub->setParameter("Range", std::to_string(range));
-  channel->subscribe(sub);
-  return sub;
+  setParameter("SampleDataType", sample_data_type);
+  setParameter("Range", std::to_string(range));
+  setParameter("RangeStart", std::to_string(start_range));
 }
 
 void SampleSubscription::addData(std::shared_ptr<std::vector<unsigned char> > &data)
@@ -35,21 +29,42 @@ void SampleSubscription::addData(std::shared_ptr<std::vector<unsigned char> > &d
   {
     SampleData * d = reinterpret_cast<SampleData *>(&data->front());
 
-    double interval = channel_->getParameter("SampleInterval")->get<double>(std::nan(""));
-    double sspeed = channel_->getParameter("SoundVelocity")->get<double>(std::nan(""));
+    auto interval_parameter = channel_.getParameter("SampleInterval");
+    if(!interval_parameter)
+      return;
+    double interval = interval_parameter->get<double>(std::nan(""));
+
+    auto sound_speed_parameter = channel_.getParameter("SoundVelocity");
+    if(!sound_speed_parameter)
+      return;
+    double sspeed = sound_speed_parameter->get<double>(std::nan(""));
     double depth = 0.0;
     
     SampleSet::Ptr ss(new SampleSet);
     ss->time = fromSimradTime(d->time);
-    ss->frequency = channel_->getParameter("Frequency")->get<double>(0.0);
+    ss->frequency = channel_.getParameter("Frequency")->get<double>(0.0);
+    ss->range = range_;
+    ss->start_range = start_range_;
     ss->z1 = -depth;
     ss->sampleInterval = interval;
     ss->soundSpeed = sspeed;
     ss->dataType = sample_data_type_;
-    ss->beamWidthX = channel_->getParameter("BeamWidthAthwartship")->get<double>(0.0);
-    ss->beamWidthY = channel_->getParameter("BeamWidthAlongship")->get<double>(0.0);
-    ss->directionX = channel_->getParameter("DirectionX")->get<double>(0.0);
-    ss->directionY = channel_->getParameter("DirectionY")->get<double>(0.0);
+
+    auto beamwidthx_param = channel_.getParameter("BeamWidthAthwartship");
+    if (beamwidthx_param)
+      ss->beamWidthX = beamwidthx_param->get<double>(0.0);
+
+    auto beamwidthy_param = channel_.getParameter("BeamWidthAlongship");
+    if (beamwidthy_param)
+      ss->beamWidthY = beamwidthy_param->get<double>(0.0);
+
+    auto direction_x_param = channel_.getParameter("DirectionX");
+    if(direction_x_param)
+      ss->directionX = direction_x_param->get<double>(0.0);
+
+    auto direction_y_param = channel_.getParameter("DirectionY");
+    if(direction_y_param)
+      ss->directionY = direction_y_param->get<double>(0.0);
     
     int count = (data->size()-sizeof(uint64_t))/sizeof(uint16_t);
     

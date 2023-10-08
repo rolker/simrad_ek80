@@ -48,7 +48,13 @@ Parameter::Ptr ParameterManager::subscribe(const std::string& parameter_name, bo
 Parameter::Ptr ParameterManager::get(const std::string& parameter_name)
 {
   std::lock_guard<std::mutex> lock(parameters_mutex_);
-  return parameters_[parameter_ids_[parameter_name]];
+  if (parameter_ids_.find(parameter_name) != parameter_ids_.end())
+  {
+    auto pid = parameter_ids_[parameter_name];
+    if(parameters_.find(pid) != parameters_.end())
+      return parameters_[parameter_ids_[parameter_name]];
+  }
+  return {};
 }
 
 Parameter::Info ParameterManager::getInfo(const std::string& parameter_name)

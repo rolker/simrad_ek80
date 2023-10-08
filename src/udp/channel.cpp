@@ -12,7 +12,7 @@ Channel::~Channel()
 {
 }
 
-std::string Channel::getName()
+const std::string& Channel::name() const
 {
   return name_;
 }
@@ -42,11 +42,12 @@ std::string Channel::getName()
 //   return target_detection_;
 // }
 
-void Channel::subscribe(SampleSubscription::Ptr subscription)
+SampleSubscription::Ptr Channel::subscribe(int range, std::string sample_data_type, int start_range)
 {
-  subscribe();
-  Subscription::Ptr sp(subscription);
-  subscription_manager_->subscribe(sp);
+  subscribe_parameters();
+  SampleSubscription::Ptr subscription = std::make_shared<SampleSubscription>(*this, range, sample_data_type, start_range);
+  subscription_manager_->subscribe(subscription);
+  return subscription;
 }
 
 void Channel::updateSubscription(Subscription::Ptr& subscription)
@@ -55,12 +56,12 @@ void Channel::updateSubscription(Subscription::Ptr& subscription)
     subscription_manager_->update(subscription);
 }
 
-std::shared_ptr<Parameter> Channel::getParameter(std::string name)
+std::shared_ptr<Parameter> Channel::getParameter(std::string name) const
 {
   return parameter_manager_->get("TransceiverMgr/"+name_+"/"+name);
 }
 
-void Channel::subscribe()
+void Channel::subscribe_parameters()
 {
   if(!subscribed_)
   {

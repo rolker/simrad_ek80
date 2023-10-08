@@ -17,8 +17,15 @@ public:
   Server(const sockaddr_in& address, const packet::ServerInfo2& serverInfo);
 
   const sockaddr_in& getAddress() const;
-  int getID() const;
-  std::string getType() const;
+
+  std::string getApplicationType() const;
+  std::string getApplicationName() const;
+  std::string getApplicationDescription() const;
+  int getApplicationID() const;
+  int getCommandPort() const;
+  int getMode() const;
+  std::string getHostName() const;
+
   std::string string() const;
 
   bool operator==(const Server& s) const;

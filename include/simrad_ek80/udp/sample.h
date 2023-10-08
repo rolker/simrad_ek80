@@ -16,6 +16,8 @@ struct SampleSet
   TimePoint time;
   float frequency;
   float z1;
+  int range;
+  int start_range;
   float sampleInterval;
   float soundSpeed;
   float beamWidthX;
@@ -32,16 +34,17 @@ class SampleSubscription: public Subscription, public Callbacks<std::shared_ptr<
 public:
   typedef std::shared_ptr<SampleSubscription> Ptr;
 
-  SampleSubscription(std::shared_ptr<Channel> channel, std::string sample_data_type);
+  SampleSubscription(const Channel& channel, int range, std::string sample_data_type, int start_range);
 
-  static Ptr subscribe(std::shared_ptr<Channel> channel, float range = 250.0, std::string sample_data_type = "Power");
+  //static Ptr subscribe(std::shared_ptr<Channel> channel, int range = 250, std::string sample_data_type = "Power", int start_range=10);
 
   void addData(std::shared_ptr<std::vector<unsigned char> >& data) override;
 
 private:            
-
+  int range_;
+  int start_range_;
   std::string sample_data_type_;
-  std::shared_ptr<Channel> channel_;
+  const Channel& channel_;
 };
 
 } // namespace simrad

@@ -19,7 +19,7 @@ SubscriptionManager::~SubscriptionManager()
   }
 }
 
-void SubscriptionManager::subscribe(Subscription::Ptr& subscription)
+void SubscriptionManager::subscribe(Subscription::Ptr subscription)
 {
   Request req(connection_, "RemoteDataServer", "Subscribe");
   req.addArgument("dataRequest", subscription->subscribeString());

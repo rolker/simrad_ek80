@@ -12,6 +12,8 @@
   <build_depend>libpcl-all-dev</build_depend>
   <exec_depend>libpcl-all</exec_depend>
   <depend>marine_acoustic_msgs</depend>
+  <build_depend>message_generation</build_depend>
+  <exec_depend>message_runtime</exec_depend>
   <depend>pcl_ros</depend>
   <depend>rosbag</depend>
   <depend>roscpp</depend>

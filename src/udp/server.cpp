@@ -49,15 +49,41 @@ const sockaddr_in& Server::getAddress() const
   return address_;
 }
 
-int Server::getID() const
+std::string Server::getApplicationType() const
+{
+  return info_.appType;
+}
+
+std::string Server::getApplicationName() const
+{
+  return info_.appName;
+}
+
+std::string Server::getApplicationDescription() const
+{
+  return info_.appDesc;
+}
+
+int Server::getApplicationID() const
 {
   return info_.appID;
 }
 
-std::string Server::getType() const
+int Server::getCommandPort() const
 {
-  return info_.appType;
+  return ntohs(address_.sin_port);
 }
+
+int Server::getMode() const
+{
+  return info_.mode;
+}
+
+std::string Server::getHostName() const
+{
+  return info_.hostName;
+}
+
 
 std::string Server::string() const
 {

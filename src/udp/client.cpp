@@ -58,4 +58,10 @@ std::shared_ptr<ParameterManager> Client::getParameterManager()
   return parameter_manager_;
 }
 
+const Server& Client::server() const
+{
+  return server_;
+}
+
+
 } // namespace simrad

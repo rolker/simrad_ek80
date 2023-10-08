@@ -10,6 +10,8 @@
 #include <rosbag/bag.h>
 #include "ping_publisher.h"
 
+#include <simrad_ek80/ServerInfo.h>
+
 std::shared_ptr<simrad::ServerManager> server_manager;
 std::shared_ptr<simrad::Client> client;
 
@@ -91,14 +93,14 @@ void server_manager_callback(ros::WallTimerEvent event)
     for(auto s: servers)
     {
       std::cout << s.string() << std::endl;
-      if (!client && (id < 0 || s.getID() == id))
+      if (!client && (id < 0 || s.getApplicationID() == id))
       {
         client = std::make_shared<simrad::Client>(s);
         client->connect();
         auto channels = client->getChannels();
         for(auto c: channels)
         {
-          std::cout << "Channel: " << c->getName() << std::endl;
+          std::cout << "Channel: " << c->name() << std::endl;
           ping_publishers.push_back(std::make_shared<PingPublisher>(c, range, replay, frame_id, bag));
         }
         parameter_manager = client->getParameterManager();
@@ -106,6 +108,23 @@ void server_manager_callback(ros::WallTimerEvent event)
       }
     }
   }
+}
+
+bool getServerInfoService(simrad_ek80::ServerInfo::Request &request, simrad_ek80::ServerInfo::Response &response)
+{
+  if(client)
+  {
+    const simrad::Server& server = client->server();
+    response.application_type = server.getApplicationType();
+    response.application_name = server.getApplicationName();
+    response.application_description = server.getApplicationDescription();
+    response.application_id = server.getApplicationID();
+    response.command_port = server.getCommandPort();
+    response.mode = server.getMode();
+    response.host_name = server.getHostName();
+    return true; 
+  }
+  return false;
 }
 
 int main(int argc, char **argv)
@@ -140,6 +159,10 @@ int main(int argc, char **argv)
   server_manager = std::make_shared<simrad::ServerManager>(addresses);
 
   ros::WallTimer server_manager_timer = nh.createWallTimer(ros::WallDuration(.5), &server_manager_callback);
+
+  ros::NodeHandle private_nh("~");
+
+  ros::ServiceServer get_server_info_service = private_nh.advertiseService("get_server_information", &getServerInfoService);
 
   ros::spin();
 

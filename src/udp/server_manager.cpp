@@ -47,7 +47,7 @@ Server ServerManager::get(int id)
 {
   auto list = getList();
   for(auto s: list)
-    if(s.getID() == id)
+    if(s.getApplicationID() == id)
       return s;
   return Server();
 }

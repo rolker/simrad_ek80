@@ -17,7 +17,7 @@ public:
   SubscriptionManager(Connection::Ptr& connection);
   ~SubscriptionManager();
 
-  void subscribe(Subscription::Ptr& subscription);
+  void subscribe(Subscription::Ptr subscription);
                 
   void update(Subscription::Ptr& subscription);
                 

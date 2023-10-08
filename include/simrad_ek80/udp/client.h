@@ -25,6 +25,7 @@ public:
 
   std::vector<Channel::Ptr> getChannels();
   std::shared_ptr<ParameterManager> getParameterManager();
+  const Server& server() const;
 private:
   Connection::Ptr connection_;
   Server server_;

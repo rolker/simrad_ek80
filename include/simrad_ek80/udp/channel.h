@@ -18,7 +18,9 @@ public:
         
   ~Channel();
 
-  std::string getName();
+  const std::string& name() const;
+
+  SampleSubscription::Ptr subscribe(int range = 250, std::string sample_data_type = "Power", int start_range=10);
 
   //BottomDetectionSubscription::Ptr& getBottomDetection();
         
@@ -27,11 +29,10 @@ public:
         
   void updateSubscription(Subscription::Ptr& subscription);
 
-  std::shared_ptr<Parameter> getParameter(std::string name);
+  std::shared_ptr<Parameter> getParameter(std::string name) const;
 
 private:
-  void subscribe(SampleSubscription::Ptr subscription);
-  void subscribe();
+  void subscribe_parameters();
 
   friend class SampleSubscription;
 

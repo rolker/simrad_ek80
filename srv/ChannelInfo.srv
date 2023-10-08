@@ -1,0 +1,9 @@
+string channel_name
+---
+# Nominal frequency for CW transmission in Hz
+float64 frequency
+
+# sample interval in seconds
+float64 sample_interval
+
+# todo, finish this

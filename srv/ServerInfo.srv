@@ -1,0 +1,9 @@
+---
+# from the EK80 protocol ServerInfo2 packet
+string application_type
+string application_name
+string application_description
+int32  application_id
+int32  command_port
+int32  mode
+string host_name

@@ -4,16 +4,16 @@ PingPublisher::PingPublisher(simrad::Channel::Ptr channel, float range, bool rep
   :replay_(replay), frame_id_(frame_id), bag_(bag)
 {
   ros::NodeHandle nh;
-  auto name = channel->getName();
+  auto name = channel->name();
   auto parts = simrad::split(name, " ");
   topic_ = simrad::replace(parts.back(), '-', '_');
 
   sonar_image_pub_ = nh.advertise<marine_acoustic_msgs::RawSonarImage>(topic_, 10);
   if(range > 0.0)
   {
-    sample_power_sub_ = simrad::SampleSubscription::subscribe(channel, range, "Power");
+    sample_power_sub_ = channel->subscribe(range, "Power");
     power_callback_ = sample_power_sub_->addCallback(std::bind(&PingPublisher::ping_callback, this, std::placeholders::_1));
-    sample_tvg20_sub_ = simrad::SampleSubscription::subscribe(channel, range, "TVG20");
+    sample_tvg20_sub_ = channel->subscribe(range, "TVG20");
     tvg20_callback_ = sample_tvg20_sub_->addCallback(std::bind(&PingPublisher::ping_callback, this, std::placeholders::_1));
   }
 }
@@ -37,6 +37,12 @@ void PingPublisher::ping_callback(std::shared_ptr<simrad::SampleSet> ping)
     si.header.stamp = rt;
     si.ping_info.frequency = power->frequency;
     si.ping_info.sound_speed = power->soundSpeed;
+
+    auto first_sample_time = power->start_range/power->soundSpeed;
+    si.sample0 = first_sample_time/power->sampleInterval;
+    // ROS_INFO_STREAM("sample time span: " << sample_count*power->sampleInterval);
+    // ROS_INFO_STREAM("calculated range: " << sample_count*power->sampleInterval*power->soundSpeed/2.0);
+    // ROS_INFO_STREAM("range: " << power->range << " start range: " << power->start_range);
 
     si.ping_info.rx_beamwidths.push_back(power->beamWidthX*M_PI/180.0);
     si.ping_info.tx_beamwidths.push_back(power->beamWidthY*M_PI/180.0);

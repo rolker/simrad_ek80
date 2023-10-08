@@ -5,10 +5,18 @@ add_compile_options(-std=c++14)
 
 find_package(catkin REQUIRED COMPONENTS
   marine_acoustic_msgs
+  message_generation
   pcl_ros
   rosbag
   roscpp
 )
+
+add_service_files(
+  FILES
+  ServerInfo.srv
+)
+
+generate_messages()
 
 catkin_package(
 #  INCLUDE_DIRS include
@@ -53,13 +61,9 @@ set (RAW_TO_BAG_SOURCES
 )
 
 add_executable(${PROJECT_NAME} ${SOURCES})
-add_dependencies(${PROJECT_NAME} ${catkin_EXPORTED_TARGETS})
+add_dependencies(${PROJECT_NAME} ${catkin_EXPORTED_TARGETS} ${PROJECT_NAME}_generate_messages_cpp)
 target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES})
     
 add_executable(raw_to_bag ${RAW_TO_BAG_SOURCES})
 add_dependencies(raw_to_bag ${catkin_EXPORTED_TARGETS})
 target_link_libraries(raw_to_bag ${catkin_LIBRARIES})
-
-add_executable(extract_targets src/extract_targets.cpp)
-add_dependencies(extract_targets ${catkin_EXPORTED_TARGETS})
-target_link_libraries(extract_targets ${catkin_LIBRARIES})
