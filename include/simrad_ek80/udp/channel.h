@@ -19,8 +19,10 @@ public:
   ~Channel();
 
   const std::string& name() const;
+  std::string topicName() const;
 
   SampleSubscription::Ptr subscribe(int range = 250, std::string sample_data_type = "Power", int start_range=10);
+  std::shared_ptr<EchogramSubscription> subscribeToEchogram(float range, float range_start, float bin_size);
 
   //BottomDetectionSubscription::Ptr& getBottomDetection();
         

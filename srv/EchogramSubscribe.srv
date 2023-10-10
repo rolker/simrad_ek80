@@ -1,0 +1,7 @@
+string channel
+float32 range
+float32 range_start
+float32 bin_size
+---
+bool success
+string message

@@ -9,8 +9,13 @@
 #include <rosgraph_msgs/Clock.h>
 #include <rosbag/bag.h>
 #include "ping_publisher.h"
+#include "echogram_publisher.h"
 
+#include <simrad_ek80/EchogramSubscribe.h>
+#include <simrad_ek80/ListChannels.h>
 #include <simrad_ek80/ServerInfo.h>
+#include <simrad_ek80/StatusInfo.h>
+#include <std_srvs/SetBool.h>
 
 std::shared_ptr<simrad::ServerManager> server_manager;
 std::shared_ptr<simrad::Client> client;
@@ -34,6 +39,9 @@ std::string bag_file;
 std::shared_ptr<rosbag::Bag> bag;
 
 std::vector<std::shared_ptr<PingPublisher> > ping_publishers;
+
+std::map<std::string, std::shared_ptr<EchogramPublisher> > echogram_publishers;
+
 
 void parameter_update_callback(simrad::TimePoint time)
 {
@@ -101,7 +109,7 @@ void server_manager_callback(ros::WallTimerEvent event)
         for(auto c: channels)
         {
           std::cout << "Channel: " << c->name() << std::endl;
-          ping_publishers.push_back(std::make_shared<PingPublisher>(c, range, replay, frame_id, bag));
+          //ping_publishers.push_back(std::make_shared<PingPublisher>(c, range, replay, frame_id, bag));
         }
         parameter_manager = client->getParameterManager();
         parameter_updates_callback_ptr = parameter_manager->addCallback(&parameter_update_callback);
@@ -122,9 +130,97 @@ bool getServerInfoService(simrad_ek80::ServerInfo::Request &request, simrad_ek80
     response.command_port = server.getCommandPort();
     response.mode = server.getMode();
     response.host_name = server.getHostName();
+    response.server_ip = server.ipAddressString();
+    response.server_port = server.serverPort();
     return true; 
   }
   return false;
+}
+
+bool listChannelsService(simrad_ek80::ListChannels::Request &request, simrad_ek80::ListChannels::Response &response)
+{
+  if(client)
+  {
+    auto channels = client->getChannels();
+    for(auto channel: channels)
+    {
+      if(channel)
+        response.channel_names.push_back(channel->topicName()+": "+channel->name());
+    }
+    return true;
+  }
+  return false;
+}
+
+bool statusService(simrad_ek80::StatusInfo::Request &request, simrad_ek80::StatusInfo::Response &response)
+{
+  if(client)
+  {
+    auto pm = client->getParameterManager();
+    if(pm)
+    {
+      response.operating_mode = pm->getValue("OperationControl/MainOperation");
+      auto pinging = pm->getValue("OperationControl/PlayState");
+      response.pinging = pinging == "Running";
+      response.ping_mode = pm->getValue("AcousticDeviceSynchroniser/PingMode");
+      response.ping_interval = pm->get("AcousticDeviceSynchroniser/Interval")->get<int>(0);
+      response.recording = pm->get("SounderStorageManager/SaveRawData")->get<int>(0);
+      response.sample_range = pm->get("SounderStorageManager/SampleRange")->get<int>(0);
+      response.sample_range_auto = pm->get("SounderStorageManager/SampleRangeAuto")->get<int>(0);
+      response.using_per_channel_recording_ranges = pm->get("SounderStorageManager/IndividualChannelRecordingRange")->get<int>(0);
+      return true;
+    }
+  }
+  return false;
+}
+
+bool enablePingingService(std_srvs::SetBool::Request& request, std_srvs::SetBool::Response& response)
+{
+  if(client)
+  {
+    auto pm = client->getParameterManager();
+    if(pm)
+    {
+      int pinging = request.data;
+      pm->set("OperationControl/PlayState", std::to_string(pinging), 3);
+      response.success = true;
+      return true;
+    }
+    response.success = false;
+    response.message = "Parameter Manager is null";
+    return true;
+  }
+  response.success = false;
+  response.message = "Client is null";
+  return true;
+}
+
+bool echogramSubscribeService(simrad_ek80::EchogramSubscribe::Request &request, simrad_ek80::EchogramSubscribe::Response& response)
+{
+  if(client)
+  {
+    auto echo_sub_iterator = echogram_publishers.find(request.channel);
+    if(echo_sub_iterator == echogram_publishers.end())
+    {
+      auto channels = client->getChannels();
+      for(auto channel: channels)
+        if(channel->topicName() == request.channel)
+        {
+          echogram_publishers[channel->topicName()] = std::make_shared<EchogramPublisher>(channel, request.range, request.range_start, request.bin_size, replay, frame_id, bag);
+          response.success = true;
+          return true;
+        }
+      response.success = false;
+      response.message = "Channel "+ request.channel +"not found";
+    }
+    response.success = false;
+    response.message = "Already subscribed";
+    return true;
+  }
+  response.success = false;
+  response.message = "Client is null";
+  return true;
+
 }
 
 int main(int argc, char **argv)
@@ -163,6 +259,10 @@ int main(int argc, char **argv)
   ros::NodeHandle private_nh("~");
 
   ros::ServiceServer get_server_info_service = private_nh.advertiseService("get_server_information", &getServerInfoService);
+  ros::ServiceServer list_channels_service = private_nh.advertiseService("list_channels", &listChannelsService);
+  ros::ServiceServer status_service = private_nh.advertiseService("status", &statusService);
+  ros::ServiceServer enable_pinging_service = private_nh.advertiseService("enable_pinging", &enablePingingService);
+  ros::ServiceServer echogram_subscribe_service = private_nh.advertiseService("echogram_subscribe", &echogramSubscribeService);
 
   ros::spin();
 

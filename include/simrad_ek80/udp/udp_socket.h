@@ -19,6 +19,7 @@ public:
   ~UDPSocket();
     
   int getPort() const;
+  int remotePort() const;
 protected:
   virtual void receivePacket(const std::vector<uint8_t>& packet) = 0;
   void sendPacket(const std::vector<uint8_t>& packet);

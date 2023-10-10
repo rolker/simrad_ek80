@@ -1,0 +1,25 @@
+# Request ping and recording status
+---
+# Main operating mode. Inactive, Normal or Replay
+string operating_mode
+
+# True if pinging
+bool pinging
+
+# Single step, Interval or Maximum
+string ping_mode
+
+# Ping interval in ms
+int32 ping_interval
+
+# true if saving raw data
+bool recording
+
+# Depth range to record
+int32 sample_range
+
+# true if depth range is auto
+bool sample_range_auto
+
+# true if using per channel recording range settings
+bool using_per_channel_recording_ranges

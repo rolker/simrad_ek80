@@ -16,8 +16,8 @@ struct SampleSet
   TimePoint time;
   float frequency;
   float z1;
-  int range;
-  int start_range;
+  double range;
+  double start_range;
   float sampleInterval;
   float soundSpeed;
   float beamWidthX;
@@ -44,6 +44,17 @@ private:
   int range_;
   int start_range_;
   std::string sample_data_type_;
+  const Channel& channel_;
+};
+
+class EchogramSubscription: public Subscription, public Callbacks<std::shared_ptr<SampleSet> >
+{
+public:
+  EchogramSubscription(const Channel& channel, int range, int start_range, float bin_size, std::string tvg_type = "Sv");
+
+  void addData(std::shared_ptr<std::vector<unsigned char> >& data) override;
+
+private:            
   const Channel& channel_;
 };
 

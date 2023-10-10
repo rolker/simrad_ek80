@@ -4,9 +4,7 @@ PingPublisher::PingPublisher(simrad::Channel::Ptr channel, float range, bool rep
   :replay_(replay), frame_id_(frame_id), bag_(bag)
 {
   ros::NodeHandle nh;
-  auto name = channel->name();
-  auto parts = simrad::split(name, " ");
-  topic_ = simrad::replace(parts.back(), '-', '_');
+  topic_ = channel->topicName();
 
   sonar_image_pub_ = nh.advertise<marine_acoustic_msgs::RawSonarImage>(topic_, 10);
   if(range > 0.0)

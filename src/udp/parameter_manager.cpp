@@ -103,6 +103,30 @@ Parameter::Info ParameterManager::getInfo(const std::string& parameter_name)
   return info;
 }
 
+void ParameterManager::set(const std::string& parameter_name, const std::string& value, int data_type)
+{
+  Request req(connection_, "ParameterServer", "SetParameter");
+  req.addArgument("paramName", parameter_name);
+  req.addArgument("paramValue", value);
+  req.addArgument("paramType", std::to_string(data_type));
+  Response r(req.getResponse());
+  switch (r.getErrorCode())
+  {
+  case 0:
+    // no problem!
+    break;
+  case -2147467259:
+    // ER60 parameter not found
+    throw(InvalidParameterException(r.getErrorMessage()));
+  default:
+    std::cerr << static_cast<std::string>(r) << std::endl;
+    throw(Exception(r.getErrorMessage()));
+  }
+                    
+  if(r.getErrorCode())
+    throw(Exception(r.getErrorMessage()));
+}
+
 std::string ParameterManager::getValue(const std::string& parameter_name)
 {
   Request req(connection_, "ParameterServer", "GetParameter");

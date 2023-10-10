@@ -26,7 +26,9 @@ public:
 
   Parameter::Ptr subscribe(const std::string& parameter_name, bool use_default = true);
   Parameter::Ptr get(const std::string& parameter_name);
-                
+
+  void set(const std::string& parameter_name, const std::string& value, int data_type);
+
   Parameter::Info getInfo(const std::string& parameter_name);
                 
   std::string getValue(const std::string& parameter_name);

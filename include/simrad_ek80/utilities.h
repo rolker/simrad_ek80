@@ -108,6 +108,10 @@ template<typename T> T swap(const T& value, bool s)
 
 std::string replace(const std::string& string, char character, char replacement);
 
+std::string toLower(const std::string& string);
+
+std::string channelNameToTopicName(const std::string& name);
+
 } // namespace simrad
 
 #endif

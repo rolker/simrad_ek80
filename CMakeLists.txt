@@ -13,7 +13,10 @@ find_package(catkin REQUIRED COMPONENTS
 
 add_service_files(
   FILES
+  EchogramSubscribe.srv
+  ListChannels.srv
   ServerInfo.srv
+  StatusInfo.srv
 )
 
 generate_messages()
@@ -31,6 +34,7 @@ include_directories(
 )
 
 set (SOURCES
+  src/echogram_publisher.cpp
   src/ping_publisher.cpp
   src/simrad_ek80_node.cpp
   src/udp/channel.cpp

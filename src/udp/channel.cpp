@@ -17,6 +17,12 @@ const std::string& Channel::name() const
   return name_;
 }
 
+std::string Channel::topicName() const
+{
+  return channelNameToTopicName(name_);
+}
+
+
 // BottomDetectionSubscription::Ptr& Channel::getBottomDetection()
 // {
 //   if(!bottom_detection_)
@@ -49,6 +55,15 @@ SampleSubscription::Ptr Channel::subscribe(int range, std::string sample_data_ty
   subscription_manager_->subscribe(subscription);
   return subscription;
 }
+
+std::shared_ptr<EchogramSubscription> Channel::subscribeToEchogram(float range, float range_start, float bin_size)
+{
+  subscribe_parameters();
+  std::shared_ptr<EchogramSubscription> subscription = std::make_shared<EchogramSubscription>(*this, range, range_start, bin_size);
+  subscription_manager_->subscribe(subscription);
+  return subscription;
+}
+
 
 void Channel::updateSubscription(Subscription::Ptr& subscription)
 {

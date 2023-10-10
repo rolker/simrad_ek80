@@ -43,6 +43,17 @@ void Client::connect(std::string uname, std::string pwd)
   parameter_manager_->subscribe("TransceiverMgr/Heave");
   parameter_manager_->subscribe("TransceiverMgr/Roll");
   parameter_manager_->subscribe("TransceiverMgr/Pitch");
+
+  parameter_manager_->subscribe("OperationControl/MainOperation", false);
+  parameter_manager_->subscribe("OperationControl/PlayState", false);
+  parameter_manager_->subscribe("AcousticDeviceSynchroniser/PingMode", false);
+  parameter_manager_->subscribe("AcousticDeviceSynchroniser/Interval", false);
+  //parameter_manager_->subscribe("StateManager/ActivateState", false);
+  parameter_manager_->subscribe("SounderStorageManager/SaveRawData", false);
+  parameter_manager_->subscribe("SounderStorageManager/SampleRange", false);
+  parameter_manager_->subscribe("SounderStorageManager/SampleRangeAuto", false);
+  parameter_manager_->subscribe("SounderStorageManager/IndividualChannelRecordingRange", false);
+
 }
 
 std::vector<Channel::Ptr> Client::getChannels()

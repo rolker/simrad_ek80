@@ -84,6 +84,16 @@ std::string Server::getHostName() const
   return info_.hostName;
 }
 
+std::string Server::ipAddressString() const
+{
+  return ipAddressToString(address_.sin_addr.s_addr);
+}
+
+int Server::serverPort() const
+{
+  return ntohs(address_.sin_port);
+}
+
 
 std::string Server::string() const
 {

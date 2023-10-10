@@ -189,4 +189,19 @@ std::string replace(const std::string& string, char character, char replacement)
   return ret;
 }
 
+std::string toLower(const std::string& string)
+{
+  std::string lower = string;
+  std::transform(lower.begin(), lower.end(), lower.begin(),
+    [](unsigned char c){ return std::tolower(c); });
+  return lower;
+}
+
+std::string channelNameToTopicName(const std::string& name)
+{
+  auto parts = simrad::split(name, " ");
+  auto topic = simrad::replace(parts.back(), '-', '_');
+  return toLower(topic);
+}
+
 } // namespace simrad

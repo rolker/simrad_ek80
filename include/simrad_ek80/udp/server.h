@@ -28,6 +28,9 @@ public:
 
   std::string string() const;
 
+  std::string ipAddressString() const;
+  int serverPort() const;
+
   bool operator==(const Server& s) const;
   operator bool() const;
 private:

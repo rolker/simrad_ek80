@@ -46,6 +46,11 @@ int UDPSocket::getPort() const
   return port_;
 }
 
+int UDPSocket::remotePort() const
+{
+  return ntohs(remote_address_.sin_port);
+}
+
 void UDPSocket::sendPacket(const std::vector<uint8_t>& packet)
 {
   std::lock_guard<std::mutex> lock(outgoing_packets_mutex_);

@@ -7,3 +7,7 @@ int32  application_id
 int32  command_port
 int32  mode
 string host_name
+
+# server address
+string server_ip
+int32 server_port
