@@ -27,7 +27,7 @@ void EchogramPublisher::ping_callback(std::shared_ptr<simrad::SampleSet> ping)
   si.ping_info.frequency = ping->frequency;
   si.ping_info.sound_speed = ping->soundSpeed;
 
-  auto first_sample_time = ping->start_range/ping->soundSpeed;
+  auto first_sample_time = 2.0*ping->start_range/ping->soundSpeed;
   si.sample0 = first_sample_time/ping->sampleInterval;
   
   si.ping_info.rx_beamwidths.push_back(ping->beamWidthX*M_PI/180.0);
