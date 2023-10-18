@@ -11,6 +11,8 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
 )
 
+catkin_python_setup()
+
 add_service_files(
   FILES
   EchogramSubscribe.srv
@@ -64,6 +66,17 @@ set (RAW_TO_BAG_SOURCES
   src/utilities.cpp
 )
 
+set (extract_nmea_SOURCES
+  src/file/channel.cpp
+  src/file/ek80.cpp
+  src/file/raw_file.cpp
+  src/file/extract_nmea.cpp
+  src/file/transceiver.cpp
+  src/file/transducer.cpp
+  src/utilities.cpp
+)
+
+
 add_executable(${PROJECT_NAME} ${SOURCES})
 add_dependencies(${PROJECT_NAME} ${catkin_EXPORTED_TARGETS} ${PROJECT_NAME}_generate_messages_cpp)
 target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES})
@@ -71,3 +84,7 @@ target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES})
 add_executable(raw_to_bag ${RAW_TO_BAG_SOURCES})
 add_dependencies(raw_to_bag ${catkin_EXPORTED_TARGETS})
 target_link_libraries(raw_to_bag ${catkin_LIBRARIES})
+
+add_executable(extract_nmea ${extract_nmea_SOURCES})
+add_dependencies(extract_nmea ${catkin_EXPORTED_TARGETS})
+target_link_libraries(extract_nmea ${catkin_LIBRARIES})
