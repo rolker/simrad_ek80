@@ -48,7 +48,7 @@ for t in times:
     last_lon = lon
   else:
     if t - last_time > gap:
-      lines.append({'from': current_start_time.isoformat(), 'to': t.isoformat(), 'distance': current_distance, 'min_lat': min_lat, 'min_lon': min_lon, 'max_lat': max_lat, 'max_lon': max_lon})
+      lines.append({'from': current_start_time.isoformat(), 'to': t.isoformat(), 'distance': current_distance, 'min_lat': min_lat, 'min_lon': min_lon, 'max_lat': max_lat, 'max_lon': max_lon, 'duration': (t-current_start_time).total_seconds()})
       current_start_time = None
     else:
       min_lat = min(min_lat, lat)
@@ -61,16 +61,18 @@ for t in times:
       last_lon = lon
       last_time = t
 
-lines.append({'from': current_start_time.isoformat(), 'to': last_time.isoformat(), 'distance': current_distance, 'min_lat': min_lat, 'min_lon': min_lon, 'max_lat': max_lat, 'max_lon': max_lon})
+lines.append({'from': current_start_time.isoformat(), 'to': last_time.isoformat(), 'distance': current_distance, 'min_lat': min_lat, 'min_lon': min_lon, 'max_lat': max_lat, 'max_lon': max_lon, 'duration':(last_time-current_start_time).total_seconds()})
 
 total_distance = 0.0
+total_duration = 0.0
 for l in lines:
   min_lat = min(min_lat, l['min_lat'])
   min_lon = min(min_lon, l['min_lon'])
   max_lat = min(max_lat, l['max_lat'])
   max_lon = min(max_lon, l['max_lon'])
   total_distance += l['distance']
+  total_duration += l['duration']
 
-results = {'lines':lines, 'total': {'from': lines[0]['from'], 'to': lines[-1]['to'], 'distance': total_distance, 'min_lat': min_lat, 'min_lon': min_lon, 'max_lat': max_lat, 'max_lon': max_lon}}
+results = {'lines':lines, 'total': {'from': lines[0]['from'], 'to': lines[-1]['to'], 'distance': total_distance, 'min_lat': min_lat, 'min_lon': min_lon, 'max_lat': max_lat, 'max_lon': max_lon}, 'survey_time': str(datetime.timedelta(seconds=total_duration))}
 
 print (json.dumps(results, indent=2))
