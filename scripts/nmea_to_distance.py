@@ -48,7 +48,7 @@ for t in times:
     last_lon = lon
   else:
     if t - last_time > gap:
-      lines.append({'from': current_start_time.isoformat(), 'to': t.isoformat(), 'distance': current_distance, 'min_lat': min_lat, 'min_lon': min_lon, 'max_lat': max_lat, 'max_lon': max_lon, 'duration': (t-current_start_time).total_seconds()})
+      lines.append({'from': current_start_time.isoformat(), 'to': last_time.isoformat(), 'distance': current_distance, 'min_lat': min_lat, 'min_lon': min_lon, 'max_lat': max_lat, 'max_lon': max_lon, 'duration': (last_time-current_start_time).total_seconds()})
       current_start_time = None
     else:
       min_lat = min(min_lat, lat)
