@@ -68,8 +68,8 @@ total_duration = 0.0
 for l in lines:
   min_lat = min(min_lat, l['min_lat'])
   min_lon = min(min_lon, l['min_lon'])
-  max_lat = min(max_lat, l['max_lat'])
-  max_lon = min(max_lon, l['max_lon'])
+  max_lat = max(max_lat, l['max_lat'])
+  max_lon = max(max_lon, l['max_lon'])
   total_distance += l['distance']
   total_duration += l['duration']
 
